@@ -1,0 +1,14 @@
+Rank 1 | Similarity 0.246 | consumer-fee-schedule.html
+    Consumer Fee Schedule (Version 8) Stop payments A stop payment on a check costs $30 per request. One request can cover a single check or a series of c
+
+Rank 2 | Similarity 0.224 | share-certificates.html
+    Share Certificates (Version 5) Dividend rates - 6-month share certificate: 3.05% annual percentage yield (APY). - 12-month share certificate: 3.40% AP
+
+Rank 3 | Similarity 0.220 | consumer-fee-schedule.html
+    Consumer Fee Schedule (Version 8) Checking account monthly fees Everyday Checking has no monthly service fee. Plus Checking has a monthly service fee 
+
+Rank 4 | Similarity 0.175 | share-certificates.html
+    Share Certificates (Version 5) Terms and minimum deposit Larkfield offers share certificates with terms of 6, 12, 24, 36, and 60 months. The minimum o
+
+ANSWER
+The sources don't contain information about mortgage rates.

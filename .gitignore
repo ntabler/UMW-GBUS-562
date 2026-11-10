@@ -221,3 +221,6 @@ __marimo__/
 
 # macOS
 .DS_Store
+
+# Week 3 RAG tool: Chroma database, rebuilt with ask.py --rebuild
+week-03/chroma_db/

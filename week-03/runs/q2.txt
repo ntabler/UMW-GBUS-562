@@ -1,0 +1,14 @@
+Rank 1 | Similarity 0.600 | consumer-fee-schedule.html
+    Consumer Fee Schedule (Version 8) ATM and debit card fees Withdrawals at Larkfield ATMs and at CO-OP network ATMs are free. A withdrawal at any other 
+
+Rank 2 | Similarity 0.521 | card-dispute-procedure.html
+    Debit Card Dispute Procedure (Version 4) How much the member may have to pay A member's share of the loss from unauthorized debit card transactions de
+
+Rank 3 | Similarity 0.503 | card-dispute-procedure.html
+    Debit Card Dispute Procedure (Version 4) When a member reports a transaction they did not make When a member says a debit card transaction on their ac
+
+Rank 4 | Similarity 0.424 | consumer-fee-schedule.html
+    Consumer Fee Schedule (Version 8) Statements and account research Electronic statements are free. Paper statements cost $2 per month. Account research
+
+ANSWER
+Rush delivery for a replacement debit card costs $30 [consumer-fee-schedule.html]. (This is the rush fee for a standard replacement; replacements are free instead when the old card was reported lost or stolen due to fraud [consumer-fee-schedule.html].)

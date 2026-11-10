@@ -1,0 +1,14 @@
+Rank 1 | Similarity 0.697 | card-dispute-procedure.html
+    Debit Card Dispute Procedure (Version 4) How much the member may have to pay A member's share of the loss from unauthorized debit card transactions de
+
+Rank 2 | Similarity 0.551 | card-dispute-procedure.html
+    Debit Card Dispute Procedure (Version 4) When a member reports a transaction they did not make When a member says a debit card transaction on their ac
+
+Rank 3 | Similarity 0.435 | card-dispute-procedure.html
+    Debit Card Dispute Procedure (Version 4) The dispute form The member must sign a dispute form listing each transaction they are disputing. The form ca
+
+Rank 4 | Similarity 0.434 | consumer-fee-schedule.html
+    Consumer Fee Schedule (Version 8) ATM and debit card fees Withdrawals at Larkfield ATMs and at CO-OP network ATMs are free. A withdrawal at any other 
+
+ANSWER
+If the member reported the lost card within two business days of learning about it, they pay no more than $50 of the fraudulent spending [card-dispute-procedure.html].
