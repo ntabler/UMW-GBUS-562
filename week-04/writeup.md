@@ -63,4 +63,4 @@ Email 3 tools: get_leave_balance, search_policy, save_reply. The agent checked B
 
 Email 6 flagged: Yes. The draft did not give any advice. It told Danielle that this was a serious issue and a member of the "People and Culture" team would personally follow up with her.
 
-Email 7 balance lookup: Error. The tool found no record for Logan's email address. The draft did not give him a number. The draft also told him his balance couldn't be found and that a member of the "People and Culture" team would personally follow up with him.
+Email 7 balance lookup: Error. The tool found no record for Logan's email address. The draft did not give him a number. The draft also told him his balance couldn't be found and that a member of the "People and Culture" team would follow up with them.
