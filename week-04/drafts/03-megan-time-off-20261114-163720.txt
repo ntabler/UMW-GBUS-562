@@ -1,0 +1,24 @@
+DRAFT - NOT SENT
+To: megan.turner@hartwellfoods.example
+Subject: Re: Family trip
+Needs human review: no
+Source email: 03-megan-time-off.eml
+Model: claude-sonnet-5
+
+Hi Megan,
+
+Thanks for reaching out, and a family trip sounds great!
+
+Here's where things stand:
+- Your current vacation balance is **7 days**. Since you're looking at 10 business days, you'd be short by 3 days.
+- Per our Vacation and Time Off Policy (leave-policy.html), you cannot take vacation days beyond what you've earned, but if a planned absence is longer than your balance, you can request **up to 5 days of unpaid leave** to cover the difference. Unpaid leave needs approval from both your manager and HR, so this would cover your 3-day gap.
+- Also note: since your trip is more than 5 consecutive business days, it needs your manager's (Lena Fischer's) approval **at least 10 business days in advance** — so with a trip about two months out, you're in good shape timing-wise, but it's worth getting the request in early.
+
+Suggested next steps:
+1. Submit your time-off request to Lena as early as possible, specifying 7 vacation days + 3 unpaid leave days.
+2. Loop in HR to approve the unpaid leave portion once your manager signs off.
+
+Let me know if you'd like help with anything else!
+
+Best,
+HR Assistant
