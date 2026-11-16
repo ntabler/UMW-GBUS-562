@@ -1,0 +1,49 @@
+Sender:  Brittany Cole <brittany.cole@ridgelinehotels.example>
+Subject: Honeymoon
+Email:   week-04/ridgeline-hotels/sample-emails/03-brittany-honeymoon.eml
+Org:     ridgeline-hotels
+Model:   claude-sonnet-5
+ridgeline-hotels: email column 'Email Address', balance columns 'PTO Days Remaining', 'Sick Days Remaining'
+Tools:  search_policy, get_leave_balance, save_reply
+
+[Step 1] get_leave_balance
+  inputs: {}
+  result: { "email": "brittany.cole@ridgelinehotels.example", "name": "Brittany Cole", "Hotel": "Ridgeline Taos", "Role": "Server", "Supervisor": "Amanda Ross", "leave_balances": { "PTO Days Remaining": 4, "Sick Days Remaining": 3 } }
+
+[Step 2] search_policy
+  inputs: {"query": "not enough PTO options unpaid leave advance vacation"}
+  result: { "source": "pto-policy.html", "title": "Paid Time Off (PTO) Policy", "version": "Effective this year. Owner: People and Culture.", "section": "Requesting PTO", "similarity": 0.621, "text": "Paid Time Off (PTO) Policy\nRequesting PTO\n\nRequest PTO through your hotel's scheduling system. Requests of...
+
+[Step 3] save_reply
+  inputs: {"reply_text": "Hi Brittany,\n\nCongratulations on your upcoming wedding!\n\nI checked your balance and you currently have 4 PTO days remaining, so you're 2 days short of the 6 you'd like to take.\n\nHere's what the PTO Policy (pto-policy.html) says that can help:\n\n1. Borrowing PTO you haven't earned yet: Since your absence would be longer than your current balance, you can borrow up to 3 PTO days from what you'll earn in the next six months. Borrowed days need your general manager's approval, and the request must be made at least 30 days in advance. Note that if you leave Ridgeline before earning those days back, their value is deducted from your final paycheck. Since your trip is about two months out, you have time to request this.\n\n2. Timing of the request: Because you're requesting 5 or more consecutive days, you'll need your supervisor's approval at least 30 days ahead of the trip (requests with a blackout date also need general manager approval).\n\nWith 4 PTO days plus up to 3 borrowed days, you'd have enough to cover the 6 days you want. I'd recommend submitting your request as soon as possible to meet the 30-day notice requirement.\n\nCongratulations again, and let us know if you have any other questions.\n\nRidgeline Hotels People and Culture", "needs_human_review": false}
+  result: Draft saved to week-04/drafts/03-brittany-honeymoon-20261116-150156.txt. Not sent.
+
+Stopped: The draft was saved, so the task is done.
+
+======================================================================
+Saved to: week-04/drafts/03-brittany-honeymoon-20261116-150156.txt
+To: brittany.cole@ridgelinehotels.example
+Subject: Re: Honeymoon
+
+DRAFT
+Hi Brittany,
+
+Congratulations on your upcoming wedding!
+
+I checked your balance and you currently have 4 PTO days remaining, so you're 2 days short of the 6 you'd like to take.
+
+Here's what the PTO Policy (pto-policy.html) says that can help:
+
+1. Borrowing PTO you haven't earned yet: Since your absence would be longer than your current balance, you can borrow up to 3 PTO days from what you'll earn in the next six months. Borrowed days need your general manager's approval, and the request must be made at least 30 days in advance. Note that if you leave Ridgeline before earning those days back, their value is deducted from your final paycheck. Since your trip is about two months out, you have time to request this.
+
+2. Timing of the request: Because you're requesting 5 or more consecutive days, you'll need your supervisor's approval at least 30 days ahead of the trip (requests with a blackout date also need general manager approval).
+
+With 4 PTO days plus up to 3 borrowed days, you'd have enough to cover the 6 days you want. I'd recommend submitting your request as soon as possible to meet the 30-day notice requirement.
+
+Congratulations again, and let us know if you have any other questions.
+
+Ridgeline Hotels People and Culture
+Needs human review: false
+======================================================================
+Tool calls: 3
+Tokens: 4568 input, 695 output

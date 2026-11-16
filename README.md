@@ -8,4 +8,4 @@ This repository holds materials created for GBUS 562 (AI Language Models) at the
 1. [week-01](week-01/): [Connect 4](week-01/connect4.html), a browser game built as a single HTML page. Play against a computer opponent that looks several moves ahead (Easy, Medium, or Hard), or switch to two-player mode and take turns on one screen.
 2. [week-02](week-02/): Week 2: a [Prompt Lab](week-02/prompt-lab.html) web app for testing prompts against Claude, built with Claude Code.
 3. [week-03](week-03/): Week 3: a RAG tool that answers questions from Copperline Manufacturing's finance documents, built with Claude Code.
-4. [week-04](week-04/): Week 4: an AI agent that prepares replies to HR emails using tools from an MCP server, built with Claude Code.
+4. [week-04](week-04/): Week 4: an AI agent that prepares replies to HR emails using tools from an MCP server, for any organization folder (Hartwell Foods and Ridgeline Hotels included), built with Claude Code.

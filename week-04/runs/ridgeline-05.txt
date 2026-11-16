@@ -1,0 +1,36 @@
+Sender:  Nicole Hayes <nicole.hayes@ridgelinehotels.example>
+Subject: Staff room rate
+Email:   week-04/ridgeline-hotels/sample-emails/05-nicole-room-rate.eml
+Org:     ridgeline-hotels
+Model:   claude-sonnet-5
+ridgeline-hotels: email column 'Email Address', balance columns 'PTO Days Remaining', 'Sick Days Remaining'
+Tools:  search_policy, get_leave_balance, save_reply
+
+[Step 1] search_policy
+  inputs: {"query": "staff room rate discount hotel employees"}
+  result: { "source": "team-member-perks.html", "title": "Team Member Perks", "version": "Effective this year. Owner: People and Culture.", "section": "Staff room rate", "similarity": 0.592, "text": "Team Member Perks\nStaff room rate\n\nAfter 90 days of employment, you can book rooms at any Ridgeline hotel a...
+
+[Step 2] save_reply
+  inputs: {"reply_text": "Hi Nicole,\n\nYes, you can use the staff room rate at the Taos hotel for a March weekend, as long as you've been employed for at least 90 days. The discount is 50% off the public rate, for up to 12 nights a year, subject to availability. You'd book it through the Team Member Travel page and show your badge at check-in. Note that the staff rate can't be combined with other offers.\n\n(Source: team-member-perks.html, \"Staff room rate\")\n\nBest,\nRidgeline Hotels People and Culture\n", "needs_human_review": true}
+  result: Draft saved to week-04/drafts/05-nicole-room-rate-20261116-150346.txt. Not sent.
+
+Stopped: The draft was saved, so the task is done.
+
+======================================================================
+Saved to: week-04/drafts/05-nicole-room-rate-20261116-150346.txt
+To: nicole.hayes@ridgelinehotels.example
+Subject: Re: Staff room rate
+
+DRAFT
+Hi Nicole,
+
+Yes, you can use the staff room rate at the Taos hotel for a March weekend, as long as you've been employed for at least 90 days. The discount is 50% off the public rate, for up to 12 nights a year, subject to availability. You'd book it through the Team Member Travel page and show your badge at check-in. Note that the staff rate can't be combined with other offers.
+
+(Source: team-member-perks.html, "Staff room rate")
+
+Best,
+Ridgeline Hotels People and Culture
+Needs human review: true
+======================================================================
+Tool calls: 2
+Tokens: 4352 input, 454 output

@@ -1,0 +1,15 @@
+DRAFT - NOT SENT
+To: logan.brooks@ridgelinehotels.example
+Subject: Re: Days off
+Needs human review: true
+Source email: 07-logan-seasonal.eml
+Model: claude-sonnet-5
+
+Hi Logan,
+
+Thanks for reaching out, and welcome to the team at the Durango hotel!
+
+I wasn't able to find a leave balance on file under your email address, so I can't give you an accurate PTO figure right now. I've flagged this so a person from People and Culture can look into it and get back to you with your correct balance.
+
+Thanks for your patience,
+Ridgeline Hotels People and Culture

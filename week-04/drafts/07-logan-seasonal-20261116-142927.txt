@@ -1,0 +1,17 @@
+DRAFT - NOT SENT
+To: logan.brooks@ridgelinehotels.example
+Subject: Re: Days off
+Needs human review: true
+Source email: 07-logan-seasonal.eml
+Model: claude-sonnet-5
+
+Hi Logan,
+
+Thanks for reaching out, and congratulations on starting as a pool attendant at our Durango hotel!
+
+I tried to look up your current PTO balance, but I wasn't able to find a matching record in our system under this email address. Rather than guess, I've flagged this for a member of our People and Culture team to check your record directly and follow up with the accurate number of days you have available.
+
+In the meantime, if you have an employee ID or if your details were entered under a different email address, feel free to share that so we can help locate your record more quickly.
+
+Thanks for your patience,
+HR Assistant, Ridgeline Hotels

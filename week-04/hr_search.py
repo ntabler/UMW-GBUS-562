@@ -1,4 +1,4 @@
-"""Search the Hartwell HR documents with a Chroma database.
+"""Search one organization's HR documents with a Chroma database.
 
 The reading, chunking, and search steps are copied from week-03/ask.py, with
 three changes so the code can run inside an MCP server:
@@ -28,10 +28,13 @@ from bs4 import BeautifulSoup, NavigableString, Tag
 from chromadb.config import Settings
 from chromadb.utils.embedding_functions import DefaultEmbeddingFunction
 
-WEEK_DIR = Path(__file__).resolve().parent
-DOCS_DIR = WEEK_DIR / "hartwell-hr" / "hr-docs"
-# Git ignores this folder.
-DB_DIR = WEEK_DIR / "chroma_db"
+import org as org_module
+
+# Set by configure(). The default is week-04/hartwell-hr. Each organization has
+# its own database folder under week-04/chroma_db/, which Git ignores.
+_DEFAULT_ORG = org_module.Org(org_module.DEFAULT_ORG_DIR)
+DOCS_DIR = _DEFAULT_ORG.docs_dir
+DB_DIR = _DEFAULT_ORG.db_dir
 
 COLLECTION = "documents"
 TOP_K = 4
@@ -46,6 +49,13 @@ MAX_INFO_WORDS = 40
 
 class SearchError(Exception):
     """A problem with the documents or the database, worded for the AI app."""
+
+
+def configure(org: org_module.Org) -> None:
+    """Search this organization's documents, with its own database."""
+    global DOCS_DIR, DB_DIR
+    DOCS_DIR = org.docs_dir
+    DB_DIR = org.db_dir
 
 
 def log(message: str) -> None:
@@ -127,7 +137,7 @@ def parse_html(path: Path) -> Document:
     page_title = soup.title.get_text() if soup.title else ""
     first_h1 = soup.find("h1")
     title = title_from(page_title or (first_h1.get_text() if first_h1 else ""), path)
-    # The Hartwell footers only say the company is fictional, so they are dropped.
+    # Footers (in the sample organizations, only a note that the company is fictional) are dropped.
     for tag in soup(["script", "style", "noscript", "template", "nav", "footer"]):
         tag.decompose()
 
@@ -276,6 +286,7 @@ def rebuild() -> None:
 
     if DB_DIR.exists():
         shutil.rmtree(DB_DIR)
+    DB_DIR.parent.mkdir(parents=True, exist_ok=True)
     client = chroma_client()
     collection = client.create_collection(
         COLLECTION,

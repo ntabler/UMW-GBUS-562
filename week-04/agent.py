@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-"""A command-line agent that drafts replies to Hartwell Foods HR emails.
+"""A command-line agent that drafts replies to HR emails for one organization.
 
 From the top of the repository:
 
     # one email file -> a draft file in week-04/drafts/
     .venv/bin/python week-04/agent.py --email week-04/hartwell-hr/sample-emails/03-megan-time-off.eml
+
+    # another organization: its own documents, employee file, and system prompt
+    .venv/bin/python week-04/agent.py --org week-04/ridgeline-hotels \
+        --email week-04/ridgeline-hotels/sample-emails/01-jenna-pto.eml --save jenna-run.txt
 
     # every unread email in the Gmail sandbox inbox -> a Gmail draft reply for each
     .venv/bin/python week-04/agent.py --inbox
@@ -12,12 +16,20 @@ From the top of the repository:
     # either mode, also writing everything printed to a UTF-8 text file
     .venv/bin/python week-04/agent.py --inbox --save run-log.txt
 
+--org FOLDER names an organization folder holding hr-docs/, employees.csv, and
+system_prompt.txt (see org.py). Without it, week-04/hartwell-hr is used. The
+employee file's email and balance columns are worked out from its header row.
+
 For each email it:
-  1. reads the sender's address from the From header,
-  2. starts week-04/hr_mcp_server.py in employee mode for that address, so Claude
-     can look up only the sender's own leave balance,
+  1. prints the sender and subject, and reads the sender's address,
+  2. starts week-04/hr_mcp_server.py for the same organization, in employee mode
+     for that address, so Claude can look up only the sender's own leave balance,
   3. offers Claude the server's tools plus save_reply, and runs the tool loop,
-  4. prints each step, the draft, and the total tokens used.
+  4. prints each step, then a line "DRAFT", the reply, and a line
+     "Needs human review: true" or "...: false", then the total tokens used.
+
+--save FILE (with --email or --inbox) also writes everything printed, including
+the MCP server's messages, to FILE as UTF-8.
 
 With --email, save_reply writes a draft file to week-04/drafts/.
 
@@ -25,7 +37,8 @@ With --inbox, the agent signs in to Gmail with IMAP, using the login in
 Agent-Email.txt in the folder above the repository (the same one load_inbox.py
 uses). It handles each unread inbox email as its own separate agent run, and it
 marks each email as read before working on it, so no email is handled twice.
-Only senders listed in employees.csv are handled; other emails stay unread.
+Only senders listed in the organization's employees.csv are handled; other
+emails stay unread.
 save_reply then creates a Gmail draft replying to the sender in the same thread.
 If needs_human_review is true, the draft's subject starts with [NEEDS HR REVIEW]
 and the email and draft get the Gmail label "Needs HR Review".
@@ -44,12 +57,13 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import csv
+import contextlib
 import imaplib
 import json
 import os
 import re
 import sys
+import threading
 import time
 from datetime import datetime
 from email import policy
@@ -63,7 +77,9 @@ import anthropic
 from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
+import org as org_module
 from load_inbox import LOGIN_FILE, read_login, sign_in
+from org import Org, OrgError
 
 MODEL = "claude-sonnet-5"
 MAX_TOKENS = 16000
@@ -75,10 +91,8 @@ REVIEW_LABEL = "Needs HR Review"  # a Gmail label, shown in Gmail's left sidebar
 WEEK_DIR = Path(__file__).resolve().parent
 REPO_DIR = WEEK_DIR.parent
 SERVER_SCRIPT = WEEK_DIR / "hr_mcp_server.py"
-SYSTEM_PROMPT_FILE = WEEK_DIR / "hartwell-hr" / "system_prompt.txt"
 DRAFTS_DIR = WEEK_DIR / "drafts"
 KEY_FILES = [REPO_DIR.parent / "API-key.txt", REPO_DIR.parent / "API-Key.txt"]
-EMPLOYEES_CSV = WEEK_DIR / "hartwell-hr" / "employees.csv"
 INBOX = "INBOX"
 DEFAULT_DRAFTS_MAILBOX = "[Gmail]/Drafts"
 
@@ -110,7 +124,8 @@ SAVE_REPLY_TOOL = {
     },
 }
 
-# A saver takes the save_reply inputs and returns (where it was saved, the draft text).
+# A saver takes the save_reply inputs and returns (where it was saved, details to
+# print above the reply, such as the To and Subject lines).
 Saver = Callable[[str, bool], tuple[str, str]]
 
 
@@ -211,14 +226,18 @@ def file_saver(email_path: Path, message: EmailMessage, sender: str) -> Saver:
             "DRAFT - NOT SENT\n"
             f"To: {sender}\n"
             f"Subject: {reply_subject(message)}\n"
-            f"Needs human review: {'yes' if needs_review else 'no'}\n"
+            f"Needs human review: {str(needs_review).lower()}\n"
             f"Source email: {email_path.name}\n"
             f"Model: {MODEL}\n"
             "\n"
             f"{reply_text}\n",
             encoding="utf-8",
         )
-        return str(path.relative_to(REPO_DIR)), path.read_text(encoding="utf-8")
+        try:
+            where = str(path.relative_to(REPO_DIR))
+        except ValueError:
+            where = str(path)
+        return where, f"To: {sender}\nSubject: {reply_subject(message)}"
 
     return save
 
@@ -251,13 +270,12 @@ def find_drafts_mailbox(imap: imaplib.IMAP4_SSL) -> str:
     return quote_mailbox(DEFAULT_DRAFTS_MAILBOX)
 
 
-def employee_addresses() -> set[str]:
-    """Work addresses from employees.csv, lowercased."""
+def employee_addresses(org: Org) -> set[str]:
+    """Work addresses from the organization's employee file, lowercased."""
     try:
-        with EMPLOYEES_CSV.open(newline="", encoding="utf-8") as file:
-            return {row["email"].strip().lower() for row in csv.DictReader(file) if row.get("email")}
-    except (OSError, KeyError, csv.Error) as error:
-        raise AgentError(f"Could not read {EMPLOYEES_CSV.name}: {error}") from error
+        return org_module.employee_addresses(org.employees_csv)
+    except OrgError as error:
+        raise AgentError(str(error)) from error
 
 
 def peek_sender(imap: imaplib.IMAP4_SSL, uid: bytes) -> str:
@@ -362,16 +380,12 @@ def gmail_saver(
                 label_note = f"WARNING: could not add the {REVIEW_LABEL!r} label: {error}"
 
         shown = (
-            "GMAIL DRAFT - NOT SENT\n"
             f"To: {draft['To']}\n"
             f"Subject: {subject}\n"
             f"In-Reply-To: {original_id or '(none: the original email had no Message-ID)'}\n"
-            f"Needs human review: {'yes' if needs_review else 'no'}\n"
-            f"Gmail label: {label_note}\n"
-            f"Model: {MODEL}\n\n"
-            f"{reply_text}\n"
+            f"Gmail label: {label_note}"
         )
-        return f"Gmail drafts ({drafts_mailbox})", shown
+        return f"Gmail drafts ({drafts_mailbox}), not sent", shown
 
     return save
 
@@ -437,11 +451,38 @@ def print_step(number: int, name: str, tool_input: dict, result: str, is_error: 
     print(f"  {'error' if is_error else 'result'}: {preview(result)}")
 
 
+@contextlib.contextmanager
+def server_errlog():
+    """A pipe for the MCP server's stderr, copied line by line to sys.stderr.
+
+    The server needs a real file for its stderr, so it can't write to the --save
+    log directly. Copying through sys.stderr puts its messages (database builds,
+    warnings) in the terminal and the log file alike.
+    """
+    read_fd, write_fd = os.pipe()
+    writer = os.fdopen(write_fd, "w", encoding="utf-8")
+
+    def copy() -> None:
+        with os.fdopen(read_fd, encoding="utf-8", errors="replace") as reader:
+            for line in reader:
+                sys.stderr.write(line)
+                sys.stderr.flush()
+
+    thread = threading.Thread(target=copy, daemon=True)
+    thread.start()
+    try:
+        yield writer
+    finally:
+        writer.close()  # the server has exited, so this ends the copy
+        thread.join(timeout=5)
+
+
 # --- Agent loop --------------------------------------------------------------
 
 
 async def run_agent(
     client: anthropic.AsyncAnthropic,
+    org: Org,
     system_prompt: str,
     message: EmailMessage,
     sender: str,
@@ -450,139 +491,150 @@ async def run_agent(
     save: Saver,
 ) -> bool:
     """One separate agent run for one email. Returns True if a draft was saved."""
-    print(f"Email:  {label}")
-    print(f"Sender: {sender}")
-    print(f"Model:  {MODEL}")
+    print(f"Sender:  {message.get('From') or sender}")
+    print(f"Subject: {message.get('Subject') or '(no subject)'}")
+    print(f"Email:   {label}")
+    print(f"Org:     {org.name}")
+    print(f"Model:   {MODEL}")
+    sys.stdout.flush()
 
     server = StdioServerParameters(
         command=sys.executable,
-        args=[str(SERVER_SCRIPT), "--as-employee", sender],
+        args=[str(SERVER_SCRIPT), "--org", str(org.dir), "--as-employee", sender],
         cwd=str(REPO_DIR),
     )
-    async with stdio_client(server, errlog=sys.__stderr__) as (read, write):
-        async with ClientSession(read, write) as session:
-            await session.initialize()
-            listed = await session.list_tools()
-            mcp_names = {tool.name for tool in listed.tools}
-            tools = [
-                {"name": t.name, "description": t.description or "", "input_schema": t.input_schema}
-                for t in listed.tools
-            ] + [SAVE_REPLY_TOOL]
-            print(f"Tools:  {', '.join(t['name'] for t in tools)}")
+    with server_errlog() as errlog:
+        async with stdio_client(server, errlog=errlog) as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                listed = await session.list_tools()
+                mcp_names = {tool.name for tool in listed.tools}
+                tools = [
+                    {"name": t.name, "description": t.description or "", "input_schema": t.input_schema}
+                    for t in listed.tools
+                ] + [SAVE_REPLY_TOOL]
+                print(f"Tools:  {', '.join(t['name'] for t in tools)}")
 
-            messages: list[dict] = [
-                {"role": "user", "content": build_user_message(message, sender, body)}
-            ]
-            input_tokens = output_tokens = 0
-            tool_calls = 0
-            draft_where: str | None = None
-            draft_text = ""
-            stop_reason_text = ""
+                messages: list[dict] = [
+                    {"role": "user", "content": build_user_message(message, sender, body)}
+                ]
+                input_tokens = output_tokens = 0
+                tool_calls = 0
+                draft_where: str | None = None
+                draft_info = ""
+                reply_text = ""
+                needs_review = True
+                stop_reason_text = ""
 
-            while True:
-                try:
-                    response = await client.messages.create(
-                        model=MODEL,
-                        max_tokens=MAX_TOKENS,
-                        system=system_prompt,
-                        tools=tools,
-                        messages=messages,
-                    )
-                except anthropic.AuthenticationError:
-                    stop_reason_text = "The API key was rejected."
-                    break
-                except anthropic.RateLimitError:
-                    stop_reason_text = "Rate limited by the API. Try again in a minute."
-                    break
-                except anthropic.APIStatusError as error:
-                    stop_reason_text = f"The API returned an error ({error.status_code}): {error.message}"
-                    break
-                except anthropic.APIConnectionError:
-                    stop_reason_text = "Could not reach the API. Check your connection."
-                    break
-
-                input_tokens += response.usage.input_tokens
-                output_tokens += response.usage.output_tokens
-                messages.append({"role": "assistant", "content": response.content})
-
-                if response.stop_reason != "tool_use":
-                    said = " ".join(b.text for b in response.content if b.type == "text").strip()
-                    stop_reason_text = (
-                        f"Claude replied without requesting a tool (stop reason: {response.stop_reason})."
-                    )
-                    if said:
-                        stop_reason_text += f"\nClaude said: {preview(said)}"
-                    break
-
-                results = []
-                for block in (b for b in response.content if b.type == "tool_use"):
-                    if tool_calls >= MAX_TOOL_CALLS:
-                        stop_reason_text = (
-                            f"Reached the limit of {MAX_TOOL_CALLS} tool calls; "
-                            f"did not run the {block.name} call Claude asked for next."
+                while True:
+                    try:
+                        response = await client.messages.create(
+                            model=MODEL,
+                            max_tokens=MAX_TOKENS,
+                            system=system_prompt,
+                            tools=tools,
+                            messages=messages,
                         )
+                    except anthropic.AuthenticationError:
+                        stop_reason_text = "The API key was rejected."
                         break
-                    tool_calls += 1
+                    except anthropic.RateLimitError:
+                        stop_reason_text = "Rate limited by the API. Try again in a minute."
+                        break
+                    except anthropic.APIStatusError as error:
+                        stop_reason_text = f"The API returned an error ({error.status_code}): {error.message}"
+                        break
+                    except anthropic.APIConnectionError:
+                        stop_reason_text = "Could not reach the API. Check your connection."
+                        break
 
-                    if block.name == "save_reply":
-                        if draft_where is not None:
-                            text, is_error = "A draft was already saved. save_reply runs only once.", True
-                        else:
+                    input_tokens += response.usage.input_tokens
+                    output_tokens += response.usage.output_tokens
+                    messages.append({"role": "assistant", "content": response.content})
+
+                    if response.stop_reason != "tool_use":
+                        said = " ".join(b.text for b in response.content if b.type == "text").strip()
+                        stop_reason_text = (
+                            f"Claude replied without requesting a tool (stop reason: {response.stop_reason})."
+                        )
+                        if said:
+                            stop_reason_text += f"\nClaude said: {preview(said)}"
+                        break
+
+                    results = []
+                    for block in (b for b in response.content if b.type == "tool_use"):
+                        if tool_calls >= MAX_TOOL_CALLS:
+                            stop_reason_text = (
+                                f"Reached the limit of {MAX_TOOL_CALLS} tool calls; "
+                                f"did not run the {block.name} call Claude asked for next."
+                            )
+                            break
+                        tool_calls += 1
+
+                        if block.name == "save_reply":
+                            if draft_where is not None:
+                                text, is_error = "A draft was already saved. save_reply runs only once.", True
+                            else:
+                                try:
+                                    checked_text, checked_review = check_reply_input(block.input)
+                                    draft_where, draft_info = save(checked_text, checked_review)
+                                    reply_text, needs_review = checked_text, checked_review
+                                    text, is_error = f"Draft saved to {draft_where}. Not sent.", False
+                                except (ValueError, OSError) as error:
+                                    text, is_error = f"The draft was not saved: {error}", True
+                        elif block.name in mcp_names:
                             try:
-                                reply_text, needs_review = check_reply_input(block.input)
-                                draft_where, draft_text = save(reply_text, needs_review)
-                                text, is_error = f"Draft saved to {draft_where}. Not sent.", False
-                            except (ValueError, OSError) as error:
-                                text, is_error = f"The draft was not saved: {error}", True
-                    elif block.name in mcp_names:
-                        try:
-                            result = await session.call_tool(block.name, block.input)
-                            text, is_error = mcp_result_text(result)
-                        except Exception as error:  # the server crashed or timed out
-                            text, is_error = f"The tool call failed: {error}", True
-                    else:
-                        text, is_error = f"There is no tool named {block.name}.", True
+                                result = await session.call_tool(block.name, block.input)
+                                text, is_error = mcp_result_text(result)
+                            except Exception as error:  # the server crashed or timed out
+                                text, is_error = f"The tool call failed: {error}", True
+                        else:
+                            text, is_error = f"There is no tool named {block.name}.", True
 
-                    print_step(tool_calls, block.name, block.input, text, is_error)
-                    results.append(
-                        {"type": "tool_result", "tool_use_id": block.id, "content": text, "is_error": is_error}
-                    )
+                        print_step(tool_calls, block.name, block.input, text, is_error)
+                        results.append(
+                            {"type": "tool_result", "tool_use_id": block.id, "content": text, "is_error": is_error}
+                        )
 
-                if stop_reason_text:
-                    break
-                if draft_where is not None:
-                    stop_reason_text = "The draft was saved, so the task is done."
-                    break
-                if tool_calls >= MAX_TOOL_CALLS:
-                    stop_reason_text = f"Reached the limit of {MAX_TOOL_CALLS} tool calls."
-                    break
-                messages.append({"role": "user", "content": results})
+                    if stop_reason_text:
+                        break
+                    if draft_where is not None:
+                        stop_reason_text = "The draft was saved, so the task is done."
+                        break
+                    if tool_calls >= MAX_TOOL_CALLS:
+                        stop_reason_text = f"Reached the limit of {MAX_TOOL_CALLS} tool calls."
+                        break
+                    messages.append({"role": "user", "content": results})
 
     print(f"\nStopped: {stop_reason_text}")
     print("\n" + "=" * 70)
     if draft_where is not None:
-        print(f"Draft ({draft_where}):\n")
-        print(draft_text.rstrip())
+        print(f"Saved to: {draft_where}")
+        print(draft_info)
+        print()
+        print("DRAFT")
+        print(reply_text)
     else:
-        print("No draft was saved.")
+        print("No draft was saved, so a person must handle this email.")
+    print(f"Needs human review: {str(needs_review).lower()}")
     print("=" * 70)
     print(f"Tool calls: {tool_calls}")
     print(f"Tokens: {input_tokens} input, {output_tokens} output")
     return draft_where is not None
 
 
-async def run_file(email_path: Path) -> int:
+async def run_file(org: Org, email_path: Path) -> int:
     message, sender, body = read_email(email_path)
-    system_prompt = SYSTEM_PROMPT_FILE.read_text(encoding="utf-8").strip()
+    system_prompt = org.system_prompt()
     client = anthropic.AsyncAnthropic(api_key=load_api_key())
     saved = await run_agent(
-        client, system_prompt, message, sender, body, str(email_path),
+        client, org, system_prompt, message, sender, body, str(email_path),
         file_saver(email_path, message, sender),
     )
     return 0 if saved else 1
 
 
-async def run_inbox() -> int:
+async def run_inbox(org: Org) -> int:
     client = anthropic.AsyncAnthropic(api_key=load_api_key())
 
     address, password = read_login(LOGIN_FILE)
@@ -599,7 +651,7 @@ async def run_inbox() -> int:
         imap_ok(status, data, "search the inbox")
         uids = data[0].split() if data and data[0] else []
         print(f"Unread emails in {INBOX}: {len(uids)}")
-        employees = employee_addresses()
+        employees = employee_addresses(org)
 
         for number, uid in enumerate(uids, start=1):
             print("\n" + "#" * 70)
@@ -610,7 +662,7 @@ async def run_inbox() -> int:
             sender_address = peek_sender(imap, uid)
             if sender_address not in employees:
                 shown = sender_address or "(no sender address)"
-                print(f"Skipped: {shown} is not in {EMPLOYEES_CSV.name}. Left unread.")
+                print(f"Skipped: {shown} is not in {org.name}/{org.employees_csv.name}. Left unread.")
                 results.append((f"UID {uid.decode()} from {shown}", "skipped (not an employee; left unread)"))
                 continue
 
@@ -630,9 +682,9 @@ async def run_inbox() -> int:
             label = f"{label}: {message.get('Subject', '(no subject)')}"
 
             # Re-read the system prompt for every run, so each email is a fresh run.
-            system_prompt = SYSTEM_PROMPT_FILE.read_text(encoding="utf-8").strip()
+            system_prompt = org.system_prompt()
             saver = gmail_saver(imap, drafts_mailbox, address, uid, message, sender)
-            saved = await run_agent(client, system_prompt, message, sender, body, label, saver)
+            saved = await run_agent(client, org, system_prompt, message, sender, body, label, saver)
             results.append((label, "draft created" if saved else "NO DRAFT (still marked read)"))
     finally:
         try:
@@ -653,7 +705,7 @@ async def run_inbox() -> int:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Draft replies to Hartwell Foods HR emails.")
+    parser = argparse.ArgumentParser(description="Draft replies to HR emails for one organization.")
     source = parser.add_mutually_exclusive_group(required=True)
     source.add_argument("--email", type=Path, help="path to one email file (.eml)")
     source.add_argument(
@@ -661,10 +713,20 @@ def main() -> None:
         help="handle every unread email in the Gmail sandbox inbox, creating Gmail drafts",
     )
     parser.add_argument(
+        "--org", metavar="FOLDER",
+        help="organization folder with hr-docs/, employees.csv, and system_prompt.txt "
+        "(default: week-04/hartwell-hr)",
+    )
+    parser.add_argument(
         "--save", type=Path, metavar="FILE",
         help="also write everything printed to this text file (UTF-8)",
     )
     args = parser.parse_args()
+
+    try:
+        org = org_module.load_org(args.org)
+    except OrgError as error:
+        sys.exit(f"Error: {error}")
 
     log = None
     if args.save:
@@ -677,8 +739,8 @@ def main() -> None:
 
     code: int | str = 0
     try:
-        code = asyncio.run(run_inbox() if args.inbox else run_file(args.email))
-    except AgentError as error:
+        code = asyncio.run(run_inbox(org) if args.inbox else run_file(org, args.email))
+    except (AgentError, OrgError) as error:
         code = f"Error: {error}"
     except (imaplib.IMAP4.error, OSError) as error:
         code = f"Error: lost the connection to Gmail: {error}"

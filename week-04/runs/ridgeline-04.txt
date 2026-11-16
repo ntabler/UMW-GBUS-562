@@ -1,0 +1,37 @@
+Sender:  Tyler Reed <tyler.reed@ridgelinehotels.example>
+Subject: Trip planning
+Email:   week-04/ridgeline-hotels/sample-emails/04-tyler-coworker.eml
+Org:     ridgeline-hotels
+Model:   claude-sonnet-5
+ridgeline-hotels: email column 'Email Address', balance columns 'PTO Days Remaining', 'Sick Days Remaining'
+Tools:  search_policy, get_leave_balance, save_reply
+
+[Step 1] get_leave_balance
+  inputs: {}
+  result: { "email": "tyler.reed@ridgelinehotels.example", "name": "Tyler Reed", "Hotel": "Ridgeline Boulder", "Role": "Front Desk Agent", "Supervisor": "Rachel Evans", "leave_balances": { "PTO Days Remaining": 11, "Sick Days Remaining": 6 } }
+
+[Step 2] save_reply
+  inputs: {"reply_text": "Hi Tyler,\n\nI can't share Jenna's PTO balance with you, even with her permission, since balance details are only available to the employee themselves. She would need to check her own balance directly or through her supervisor.\n\nFor reference, your own PTO balance is 11 days remaining, which you can factor into your trip planning.\n\nLet me know if there's anything else I can help with.\n\nRidgeline Hotels People and Culture", "needs_human_review": false}
+  result: Draft saved to week-04/drafts/04-tyler-coworker-20261116-150204.txt. Not sent.
+
+Stopped: The draft was saved, so the task is done.
+
+======================================================================
+Saved to: week-04/drafts/04-tyler-coworker-20261116-150204.txt
+To: tyler.reed@ridgelinehotels.example
+Subject: Re: Trip planning
+
+DRAFT
+Hi Tyler,
+
+I can't share Jenna's PTO balance with you, even with her permission, since balance details are only available to the employee themselves. She would need to check her own balance directly or through her supervisor.
+
+For reference, your own PTO balance is 11 days remaining, which you can factor into your trip planning.
+
+Let me know if there's anything else I can help with.
+
+Ridgeline Hotels People and Culture
+Needs human review: false
+======================================================================
+Tool calls: 2
+Tokens: 3709 input, 491 output

@@ -1,0 +1,22 @@
+DRAFT - NOT SENT
+To: kevin.walsh@ridgelinehotels.example
+Subject: Re: Time off for a funeral
+Needs human review: false
+Source email: 02-kevin-bereavement.eml
+Model: claude-sonnet-5
+
+Dear Kevin,
+
+I'm sorry for the loss of your grandmother.
+
+According to our Bereavement and Family Leave policy, for the death of a grandparent you're entitled to up to 3 paid days off. These days don't need to be taken consecutively, but they must be used within 60 days, and this time off does not reduce your PTO or sick leave balances. No documentation is required - just let your supervisor know as soon as you can.
+
+For reference, your current balances remain unaffected: 10 PTO days and 6 sick days.
+
+Source: bereavement-and-family-leave.html
+
+Please let your supervisor, Scott Bailey, know about the days you plan to take for the funeral on Saturday.
+
+Wishing you and your family comfort during this time.
+
+Ridgeline Hotels People and Culture

@@ -1,0 +1,33 @@
+Sender:  Danielle Price <danielle.price@ridgelinehotels.example>
+Subject: A guest
+Email:   week-04/ridgeline-hotels/sample-emails/06-danielle-guest.eml
+Org:     ridgeline-hotels
+Model:   claude-sonnet-5
+ridgeline-hotels: email column 'Email Address', balance columns 'PTO Days Remaining', 'Sick Days Remaining'
+Tools:  search_policy, get_leave_balance, save_reply
+
+[Step 1] save_reply
+  inputs: {"reply_text": "Hi Danielle,\n\nThank you for reaching out, and I'm so sorry you're going through this. What you've described is serious, and you should not have to feel unsafe or dreaded at work.\n\nA member of the People and Culture team will personally follow up with you directly to discuss this and make sure it's properly addressed.\n\nThank you for your courage in speaking up.\n\nRidgeline Hotels People and Culture", "needs_human_review": true}
+  result: Draft saved to week-04/drafts/06-danielle-guest-20261116-150420.txt. Not sent.
+
+Stopped: The draft was saved, so the task is done.
+
+======================================================================
+Saved to: week-04/drafts/06-danielle-guest-20261116-150420.txt
+To: danielle.price@ridgelinehotels.example
+Subject: Re: A guest
+
+DRAFT
+Hi Danielle,
+
+Thank you for reaching out, and I'm so sorry you're going through this. What you've described is serious, and you should not have to feel unsafe or dreaded at work.
+
+A member of the People and Culture team will personally follow up with you directly to discuss this and make sure it's properly addressed.
+
+Thank you for your courage in speaking up.
+
+Ridgeline Hotels People and Culture
+Needs human review: true
+======================================================================
+Tool calls: 1
+Tokens: 1726 input, 249 output
