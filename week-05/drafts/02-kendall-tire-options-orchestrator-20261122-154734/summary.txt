@@ -1,0 +1,24 @@
+Email: 02-kendall-tire-options.eml (PO-7795 - TR-29 tires - two options, please choose)
+Coordinator: orchestrator
+Orchestrator's summary: Kendall Tire Supply can't fulfill PO-7795 (400 TR-29 tires) in full on schedule due to equipment downtime. They offer two options: (1) ship 160 now + 240 two weeks later — this creates no risk to customer orders; or (2) hold and ship all 400 together, 4 days late — this would make order O-1046 (Hilltop Outfitters, 40 units) arrive 3 days late, though no contractual penalty applies. Kendall needs an answer within 2 business days or will default to Option 2. I have NOT drafted a supplier reply or customer notice yet, since a person must choose an option first (drafting customer notices is blocked until the option is decided, and the reply should reflect that choice). Please decide between Option 1 and Option 2 so I can proceed with the supplier reply and any needed customer notice.
+Orchestrator says a person must decide: YES
+
+Drafts saved: none
+
+Drafts marked for a person: none
+
+Decisions for a person (5):
+  - Choose between Option 1 (no orders at risk) and Option 2 (puts order O-1046 for Hilltop Outfitters 3 days late, short 40 units) within two business days, or Option 2 will be applied by default.
+  - If Option 2 is chosen or defaulted to, decide how to handle the 3-day delay/shortfall for O-1046 (Hilltop Outfitters), though it currently carries no late penalty.
+  - Supplier asked: Which option (1 or 2) does Brookfield prefer for splitting/delaying PO-7795?
+  - Choose an option. Option 1: 160 tires on day 8, remaining 240 on day 22 puts at risk: no orders.
+  - Choose an option. Option 2: all 400 tires on day 12 (default if no reply) puts at risk: O-1046.
+
+Skipped:
+  - Customer notices: the supplier offered options, so no notice is drafted until a person chooses one.
+  - Supplier reply: the orchestrator did not draft one.
+
+Tokens:
+  orchestrator: 2 call(s), 3914 input, 506 output tokens
+  supply analyst: 4 call(s), 13539 input, 1500 output tokens
+  Total: 17453 input, 2006 output tokens

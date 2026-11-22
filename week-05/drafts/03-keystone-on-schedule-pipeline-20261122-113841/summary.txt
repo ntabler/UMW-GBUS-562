@@ -1,0 +1,17 @@
+Email: 03-keystone-on-schedule.eml (PO-7790 - BP-48 battery packs - shipped on schedule)
+Coordinator: pipeline
+
+Drafts saved: none
+
+Drafts marked for a person: none
+
+Decisions for a person: none
+
+Skipped:
+  - Customer notices: no orders at risk.
+  - Supplier reply: the writer found that no reply is needed.
+
+Tokens:
+  supply analyst: 3 call(s), 7552 input, 369 output tokens
+  supplier writer: 1 call(s), 611 input, 13 output tokens
+  Total: 8163 input, 382 output tokens

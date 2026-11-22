@@ -1,0 +1,24 @@
+Email: 01-northgate-controller-delay.eml (PO-7781 - MC-500 controllers - revised shipment schedule)
+Coordinator: pipeline
+
+Drafts saved (4), in week-05/drafts/01-northgate-controller-delay-pipeline-20261122-114927/:
+  - supplier-reply.txt  to k.walsh@northgatedrive.example  (reviewer approved)
+  - notice-O-1043.txt  to fleet@ashfordbikeshare.example  (FOR A PERSON)
+  - notice-O-1044.txt  to owner@mainstreetbikes.example  (reviewer approved)
+  - notice-O-1045.txt  to info@lakeviewrentals.example  (reviewer approved)
+
+Drafts marked for a person (1):
+  - notice-O-1043.txt: O-1043 has a late penalty.
+
+Decisions for a person (4):
+  - Decide whether to accept the split shipment schedule or pursue alternative options with Northgate Drive Systems (e.g., expediting part of the delayed 280 units) to protect City of Ashford Bike Share's order (O-1043), which has a late penalty and would be 12 days late.
+  - Consider whether to negotiate priority delivery to also protect Main Street Bikes (O-1044) and Lakeview Rentals (O-1045), which would be 8 and 5 days late respectively under the new schedule.
+  - Decide how to respond to the supplier's offer to discuss other options this week.
+  - Supplier asked: Which of your customers are most affected by this delay, so Northgate can understand the impact on Brookfield's side?
+
+Tokens:
+  supply analyst: 3 call(s), 9531 input, 849 output tokens
+  customer writer: 3 call(s), 1111 input, 538 output tokens
+  reviewer: 5 call(s), 5790 input, 1100 output tokens
+  supplier writer: 2 call(s), 2751 input, 760 output tokens
+  Total: 19183 input, 3247 output tokens

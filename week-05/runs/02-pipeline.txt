@@ -1,0 +1,181 @@
+Email:   week-05/brookfield-bikes/supplier-emails/02-kendall-tire-options.eml
+From:    Lisa Moreno <l.moreno@kendalltire.example>
+Subject: PO-7795 - TR-29 tires - two options, please choose
+
+--- Supply analyst ----------------------------------------------------
+
+>>> HANDOFF  pipeline -> supply analyst: supplier email 02-kendall-tire-options.eml
+    | <email>
+    | From: Lisa Moreno <l.moreno@kendalltire.example>
+    | Subject: PO-7795 - TR-29 tires - two options, please choose
+    | 
+    | Hi,
+    | 
+    | About PO-7795 for 400 TR-29 trail tires: a mixing machine at our plant is down
+    | for repairs, so we can't fill the whole order at once. We can offer two options:
+    | 
+    | Option 1: Ship 160 tires on the scheduled date, and the remaining 240 two weeks
+    | later.
+    | 
+    | Option 2: Hold the order and ship all 400 tires together, four days after the
+    | scheduled date.
+    | 
+    | Please tell us which option you prefer within two business days. If we don't
+    | hear from you, we'll go with Option 2.
+    | 
+    | Thanks,
+    | Lisa Moreno
+    | Customer Service, Kendall Tire Supply
+    | </email>
+[supply server] brookfield-bikes: 3 parts, 3 purchase orders, 10 open orders
+  (supply analyst: 1961 input, 106 output tokens)
+
+[supply analyst step 1] get_part
+  inputs: {"part_id": "TR-29"}
+  result: { "part_id": "TR-29", "description": "29-inch trail tire", "on_hand": 120, "supplier": "Kendall Tire Supply", "models_using": [ { "model": "Trail 29", "qty_per_bike": 2 } ], "scheduled_shipments": [ { "po_number": "PO-7795", "part_id": "TR-29", "supplier": "Kendall Tire Supply", "qty": 400, "arrives...
+
+[supply analyst step 2] get_orders_for_part
+  inputs: {"part_id": "TR-29"}
+  result: { "part_id": "TR-29", "orders": [ { "order_id": "O-1046", "customer": "Hilltop Outfitters", "model": "Trail 29", "bikes": 80, "units_needed": 160, "ship_day": 9, "late_penalty": false }, { "order_id": "O-1049", "customer": "Pine Valley Outdoors", "model": "Trail 29", "bikes": 40, "units_needed": 80,...
+  (supply analyst: 2635 input, 275 output tokens)
+
+[supply analyst step 3] check_coverage
+  inputs: {"part_id": "TR-29", "arrivals": [{"qty": 160, "arrives_in_days": 8}, {"qty": 240, "arrives_in_days": 22}]}
+  result: { "part_id": "TR-29", "on_hand": 120, "shipments": [ { "qty": 160, "arrives_in_days": 8 }, { "qty": 240, "arrives_in_days": 22 } ], "orders": [ { "order_id": "O-1046", "customer": "Hilltop Outfitters", "model": "Trail 29", "bikes": 80, "units_needed": 160, "ship_day": 9, "late_penalty": false, "cove...
+
+[supply analyst step 4] check_coverage
+  inputs: {"part_id": "TR-29", "arrivals": [{"qty": 400, "arrives_in_days": 12}]}
+  result: { "part_id": "TR-29", "on_hand": 120, "shipments": [ { "qty": 400, "arrives_in_days": 12 } ], "orders": [ { "order_id": "O-1046", "customer": "Hilltop Outfitters", "model": "Trail 29", "bikes": 80, "units_needed": 160, "ship_day": 9, "late_penalty": false, "covered": false, "units_short": 40, "ready...
+  (supply analyst: 4099 input, 497 output tokens)
+
+Code checks rejected the brief:
+  - Each option needs a name and a list of order_ids.
+  - Each option needs a name and a list of order_ids.
+
+>>> HANDOFF  code checks -> supply analyst: problems to fix
+    | Each option needs a name and a list of order_ids.
+    | Each option needs a name and a list of order_ids.
+  (supply analyst: 4670 input, 487 output tokens)
+
+>>> HANDOFF  supply analyst -> pipeline: brief (1 order(s) at risk, 4 tool call(s))
+    | {
+    |   "part_id": "TR-29",
+    |   "what_changed": "Supplier cannot ship PO-7795 (400 TR-29 tires) as a single delivery on day 8; Option 1 splits it into 160 units on day 8 and 240 units on day 22, while Option 2 ships all 400 units together on day 12.",
+    |   "orders_at_risk": [
+    |     {
+    |       "order_id": "O-1046",
+    |       "customer": "Hilltop Outfitters",
+    |       "units_short": 40,
+    |       "ship_day": 9,
+    |       "ready_day": 12,
+    |       "late_penalty": false
+    |     }
+    |   ],
+    |   "options": [
+    |     {
+    |       "name": "Option 1: 160 units on day 8, 240 units on day 22",
+    |       "order_ids": []
+    |     },
+    |     {
+    |       "name": "Option 2: all 400 units on day 12",
+    |       "order_ids": [
+    |         "O-1046"
+    |       ]
+    |     }
+    |   ],
+    |   "decisions_for_a_person": [
+    |     "Choose between Option 1 (no orders at risk) and Option 2 (default if no response, but delays O-1046 by 3 days, short 40 units) within two business days.",
+    |     "If Option 2 is chosen, decide how to handle the 3-day delay for Hilltop Outfitters' order O-1046 (no late penalty applies, but shipment would be late)."
+    |   ],
+    |   "supplier_questions": [
+    |     "Which option do you prefer, Option 1 or Option 2?"
+    |   ]
+    | }
+
+>>> HANDOFF  pipeline -> customer writer: skipped: options are undecided
+
+--- Supplier reply ----------------------------------------------------
+
+>>> HANDOFF  pipeline -> supplier writer: facts to write from
+    | {
+    |   "part_id": "TR-29",
+    |   "what_changed": "Supplier cannot ship PO-7795 (400 TR-29 tires) as a single delivery on day 8; Option 1 splits it into 160 units on day 8 and 240 units on day 22, while Option 2 ships all 400 units together on day 12.",
+    |   "orders_at_risk": [
+    |     {
+    |       "units_short": 40,
+    |       "ship_day": 9,
+    |       "ready_day": 12,
+    |       "days_late": 3
+    |     }
+    |   ],
+    |   "options": [
+    |     {
+    |       "name": "Option 1: 160 units on day 8, 240 units on day 22",
+    |       "orders_at_risk": 0
+    |     },
+    |     {
+    |       "name": "Option 2: all 400 units on day 12",
+    |       "orders_at_risk": 1
+    |     }
+    |   ],
+    |   "decisions_for_a_person": [
+    |     "Choose between Option 1 (no orders at risk) and Option 2 (default if no response, but delays [an order] by 3 days, short 40 units) within two business days.",
+    |     "If Option 2 is chosen, decide how to handle the 3-day delay for [a customer]' order [an order] (no late penalty applies, but shipment would be late)."
+    |   ],
+    |   "supplier_questions": [
+    |     "Which option do you prefer, Option 1 or Option 2?"
+    |   ]
+    | }
+  (supplier writer: 1040 input, 275 output tokens)
+
+[supplier writer, draft 1]
+Subject: RE: PO-7795 - TR-29 tires - two options, please choose
+
+Hi Lisa,
+
+Thank you for flagging this. To confirm our understanding:
+
+- Option 1: 160 tires on day 8, remaining 240 on day 22.
+- Option 2: all 400 tires together on day 12 (4 days later than scheduled).
+
+Impact on our side: Option 2 would leave one of our outgoing orders short by 40 units and delay it by 3 days. Option 1 avoids any shortfall or delay to that order.
+
+We will confirm our choice within your two-business-day window. In the meantime, please let us know if there's any way to ship more tires sooner than Option 1 or 2 propose, as that would help reduce the impact further.
+
+Thanks for your continued support.
+
+Purchasing, Brookfield Bicycle Company
+
+>>> HANDOFF  supplier writer -> reviewer: draft 1
+  (reviewer: 1486 input, 7 output tokens)
+
+>>> HANDOFF  reviewer -> pipeline: APPROVE
+
+[code check] passed
+
+Saved: week-05/drafts/02-kendall-tire-options-pipeline-20261122-114732/supplier-reply.txt
+
+--- Summary -----------------------------------------------------------
+Email: 02-kendall-tire-options.eml (PO-7795 - TR-29 tires - two options, please choose)
+Coordinator: pipeline
+
+Drafts saved (1), in week-05/drafts/02-kendall-tire-options-pipeline-20261122-114732/:
+  - supplier-reply.txt  to l.moreno@kendalltire.example  (reviewer approved)
+
+Drafts marked for a person: none
+
+Decisions for a person (5):
+  - Choose between Option 1 (no orders at risk) and Option 2 (default if no response, but delays O-1046 by 3 days, short 40 units) within two business days.
+  - If Option 2 is chosen, decide how to handle the 3-day delay for Hilltop Outfitters' order O-1046 (no late penalty applies, but shipment would be late).
+  - Supplier asked: Which option do you prefer, Option 1 or Option 2?
+  - Choose an option. Option 1: 160 units on day 8, 240 units on day 22 puts at risk: no orders.
+  - Choose an option. Option 2: all 400 units on day 12 puts at risk: O-1046.
+
+Skipped:
+  - Customer notices: the supplier offered options, so no notice is drafted until a person chooses one.
+
+Tokens:
+  supply analyst: 4 call(s), 13365 input, 1365 output tokens
+  supplier writer: 1 call(s), 1040 input, 275 output tokens
+  reviewer: 1 call(s), 1486 input, 7 output tokens
+  Total: 15891 input, 1647 output tokens

@@ -1,0 +1,34 @@
+DRAFT - NOT SENT
+To: k.walsh@northgatedrive.example
+Subject: Re: PO-7781 - MC-500 controllers - revised shipment schedule
+For a person: no
+  (none)
+Source email: 01-northgate-controller-delay.eml
+Coordinator: pipeline
+
+Reviews:
+  Draft 1: REVISE
+  - Rule 2: The draft states "we will confirm our position with you by the end of this week," committing Brookfield to a specific response deadline. The facts show this decision is still pending ("Decide how to respond to the supplier's offer...") and the supplier only said they were "available this week," not that they needed an answer by then. Remove this commitment or rephrase to avoid setting any deadline not given by the supplier.
+  Draft 2: APPROVE
+
+-----
+Subject: RE: PO-7781 - MC-500 controllers - revised shipment schedule
+
+Hello Karen,
+
+Thank you for the update. To confirm, PO-7781 for 400 MC-500 controllers will now arrive in two shipments: 120 units on day 5 as originally scheduled, and the remaining 280 units on day 26, three weeks later than planned.
+
+This split impacts three of our downstream orders, which will be delayed as follows:
+- 10 units short, resulting in a 12-day delay
+- 30 units short, resulting in an 8-day delay
+- 50 units short, resulting in a 5-day delay
+
+We're not able to share details on which customers are affected, but the impact above reflects the scope of the disruption on our end.
+
+We'd like to ask whether any portion of the 280 units could be expedited or shipped sooner than day 26, even in smaller partial shipments, as this would help reduce the delay on our most time-sensitive orders. Please let us know what flexibility exists there.
+
+We'll follow up regarding other options as we finalize our thinking on this.
+
+Thank you for your attention to this.
+
+Purchasing, Brookfield Bicycle Company

@@ -1,0 +1,24 @@
+Email: 01-northgate-controller-delay.eml (PO-7781 - MC-500 controllers - revised shipment schedule)
+Coordinator: orchestrator
+Orchestrator's summary: Northgate Drive Systems notified us that PO-7781 (400 MC-500 controllers) will now arrive in two shipments: 120 on the original date and 280 three weeks later. The supply analyst found three customer orders at risk: O-1043 (City of Ashford Bike Share, 10 units short, 12 days late, penalty-bearing), O-1044 (Main Street Bikes, 30 units short, 8 days late), and O-1045 (Lakeview Rentals, 50 units short, 5 days late). A reply to the supplier has been drafted and saved for review, asking about the delay impact per Karen Walsh's request. No alternative supply options were offered by the supplier, so a purchasing manager needs to decide whether to accept the revised split schedule or pursue other arrangements with Northgate before we draft and send any customer notices, especially given the penalty exposure on O-1043.
+Orchestrator says a person must decide: YES
+
+Drafts saved (1), in week-05/drafts/01-northgate-controller-delay-orchestrator-20261122-122730/:
+  - supplier-reply.txt  to k.walsh@northgatedrive.example  (reviewer approved)
+
+Drafts marked for a person: none
+
+Decisions for a person (3):
+  - Decide whether to accept the revised split schedule (120 on day 5, 280 on day 26) or pursue alternative arrangements with Karen Walsh given the delays to O-1043 (penalty-bearing, 12 days late), O-1044 (8 days late), and O-1045 (5 days late).
+  - Determine whether to respond to the supplier with information on which customers are most affected, as requested.
+  - Supplier asked: Which of Brookfield's customers are most affected by the delay, so Northgate can understand the impact?
+
+Skipped:
+  - Customer notices: none drafted for O-1043, O-1044, O-1045.
+
+Tokens:
+  orchestrator: 3 call(s), 6598 input, 822 output tokens
+  supply analyst: 3 call(s), 9565 input, 812 output tokens
+  supplier writer: 1 call(s), 1056 input, 342 output tokens
+  reviewer: 1 call(s), 1593 input, 379 output tokens
+  Total: 18812 input, 2355 output tokens

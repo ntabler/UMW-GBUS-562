@@ -1,0 +1,23 @@
+Email: 02-kendall-tire-options.eml (PO-7795 - TR-29 tires - two options, please choose)
+Coordinator: pipeline
+
+Drafts saved (1), in week-05/drafts/02-kendall-tire-options-pipeline-20261122-114732/:
+  - supplier-reply.txt  to l.moreno@kendalltire.example  (reviewer approved)
+
+Drafts marked for a person: none
+
+Decisions for a person (5):
+  - Choose between Option 1 (no orders at risk) and Option 2 (default if no response, but delays O-1046 by 3 days, short 40 units) within two business days.
+  - If Option 2 is chosen, decide how to handle the 3-day delay for Hilltop Outfitters' order O-1046 (no late penalty applies, but shipment would be late).
+  - Supplier asked: Which option do you prefer, Option 1 or Option 2?
+  - Choose an option. Option 1: 160 units on day 8, 240 units on day 22 puts at risk: no orders.
+  - Choose an option. Option 2: all 400 units on day 12 puts at risk: O-1046.
+
+Skipped:
+  - Customer notices: the supplier offered options, so no notice is drafted until a person chooses one.
+
+Tokens:
+  supply analyst: 4 call(s), 13365 input, 1365 output tokens
+  supplier writer: 1 call(s), 1040 input, 275 output tokens
+  reviewer: 1 call(s), 1486 input, 7 output tokens
+  Total: 15891 input, 1647 output tokens
