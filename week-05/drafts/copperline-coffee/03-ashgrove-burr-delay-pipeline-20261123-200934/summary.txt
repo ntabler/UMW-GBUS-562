@@ -1,0 +1,24 @@
+Email: 03-ashgrove-burr-delay.eml (PO-5531 - BR-64 burr sets - arriving 3 days late)
+Coordinator: pipeline
+
+Check the analyst's reading against the supplier's own words:
+  Supplier wrote:
+    "A heat-treatment furnace at our plant needed an unplanned repair, so PO-5531 for 120 BR-64 burr sets will arrive 3 days after the scheduled date."
+    "The full quantity will ship together."
+  Analyst's reading: PO-5531's 120 BR-64 burr sets will now arrive on day 13 instead of day 10 (3 days late), shipping as a full quantity together.
+
+Drafts saved (1), in week-05/drafts/copperline-coffee/03-ashgrove-burr-delay-pipeline-20261123-200934/:
+  - supplier-reply.txt  to p.raman@ashgroveprecision.example  (reviewer approved)
+
+Drafts marked for a person: none
+
+Decisions for a person: none
+
+Skipped:
+  - Customer notices: no orders at risk.
+
+Tokens:
+  supply analyst: 3 call(s), 7572 input, 336 output tokens
+  supplier writer: 1 call(s), 633 input, 215 output tokens
+  reviewer: 1 call(s), 878 input, 7 output tokens
+  Total: 9083 input, 558 output tokens

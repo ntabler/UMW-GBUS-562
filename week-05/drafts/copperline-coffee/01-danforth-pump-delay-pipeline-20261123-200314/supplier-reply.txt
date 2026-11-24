@@ -1,0 +1,28 @@
+DRAFT - NOT SENT
+To: d.kessler@danforthpump.example
+Subject: Re: PO-5512 - PU-20 pumps - partial shipment
+For a person: no
+  (none)
+Source email: 01-danforth-pump-delay.eml
+Coordinator: pipeline
+
+Reviews:
+  Draft 1: REVISE
+  1. The draft mentions specific downstream order impacts (10/20/25 units short, 7/4/2 days late) — this describes customer orders' details (even without names) to the supplier, which violates rule 3 ("describes no customer's order"). Remove the breakdown of units short and days late per order; keep only a general statement that the delay impacts downstream orders.
+  Draft 2: APPROVE
+
+-----
+Subject: RE: PO-5512 - PU-20 pumps - partial shipment
+
+Hello Diane,
+
+Thank you for the update. To confirm our understanding: PO-5512 will now arrive as 40 pumps on day 4, with the remaining 160 pumps on day 19, instead of all 200 on the original date.
+
+This split will impact downstream orders on our end, resulting in both unit shortfalls and delays. We're not able to share customer names or order details.
+
+Given this, we'd ask that you look at options to reduce the gap — in particular, whether any portion of the 160 pumps could be shipped sooner than day 19, even in smaller partial batches. That would help us reduce the delay on our end.
+
+If you need a decision from us on anything related to this change, we'll confirm by the time you require.
+
+Best regards,
+Purchasing, Copperline Coffee Machines

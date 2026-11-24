@@ -1,0 +1,28 @@
+DRAFT - NOT SENT
+To: dining@elmstate.example
+Subject: Update on your order O-2203
+For a person: YES
+  - O-2203 has a late penalty.
+Source email: 01-danforth-pump-delay.eml
+Coordinator: pipeline
+
+Reviews:
+  Draft 1: REVISE
+  1. None — numbers match facts.
+  4. The draft references "a delay in a part from one of our suppliers," which mentions a supplier (even if unnamed, it discloses supplier involvement). Remove this phrase; simply state the order is delayed without attributing cause to a supplier. Change to something like: "This order is now expected to ship 7 days later than originally planned."
+  Draft 2: APPROVE
+
+-----
+Subject: Update on Your Order O-2203
+
+Dear Elm State University Dining,
+
+We're writing to update you on order O-2203 for 50 units of the Cafe One.
+
+This order is now expected to ship 7 days later than originally planned.
+
+We apologize for this delay and any inconvenience it causes your team.
+
+We will keep you informed if there are any further updates regarding your order. Thank you for your patience and for choosing Copperline Coffee Machines.
+
+Customer Service, Copperline Coffee Machines

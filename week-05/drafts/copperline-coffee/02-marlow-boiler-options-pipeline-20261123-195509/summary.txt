@@ -1,0 +1,32 @@
+Email: 02-marlow-boiler-options.eml (PO-5520 - BL-12 boilers - please choose a shipping option)
+Coordinator: pipeline
+
+Check the analyst's reading against the supplier's own words:
+  Supplier wrote:
+    "About PO-5520 for 200 BL-12 boilers: our welding cell is running at half capacity this month, so we can't ship the whole order on time."
+    "Option A: Ship 80 boilers on the scheduled date, and the remaining 120 two weeks after that."
+    "Option B: Ship all 200 boilers together, six days after the scheduled date."
+    "Please let us know which option you'd like within three business days."
+  Analyst's reading: PO-5520 (200 BL-12 boilers, originally due day 7) will now be split or delayed: Option A ships 80 units on day 7 and the remaining 120 on day 21, while Option B ships all 200 units together on day 13.
+
+Drafts saved (1), in week-05/drafts/copperline-coffee/02-marlow-boiler-options-pipeline-20261123-195509/:
+  - supplier-reply.txt  to v.lindqvist@marlowmetal.example  (reviewer approved)
+
+Drafts marked for a person: none
+
+Decisions for a person (6):
+  - Choose between Option A and Option B within the supplier's 3-business-day deadline, since the default (Option B) risks a late, penalty-bearing order (O-2203, Elm State University Dining) whereas Option A risks a different late, penalty-bearing order (O-2205, Tall Pines Coffee House).
+  - Option A: O-2205 (Tall Pines Coffee House) would be short 5 units, ship_day 17, ready_day 21, late_penalty true.
+  - Option B: O-2203 (Elm State University Dining) would be short 40 units, ship_day 12, ready_day 13, late_penalty true.
+  - Supplier asked: Which shipping option (A or B) would Copperline like for PO-5520, to be confirmed within three business days?
+  - Choose an option. Option A (80 on day 7, 120 on day 21) puts at risk: O-2205.
+  - Choose an option. Option B (200 together on day 13) puts at risk: O-2203.
+
+Skipped:
+  - Customer notices: the supplier offered options, so no notice is drafted until a person chooses one.
+
+Tokens:
+  supply analyst: 4 call(s), 16810 input, 1342 output tokens
+  supplier writer: 2 call(s), 2531 input, 459 output tokens
+  reviewer: 2 call(s), 2645 input, 120 output tokens
+  Total: 21986 input, 1921 output tokens

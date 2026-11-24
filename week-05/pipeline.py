@@ -1,11 +1,16 @@
 #!/usr/bin/env python3
-"""Coordinator 1: a fixed pipeline that prepares Brookfield's response to one supplier email.
+"""Coordinator 1: a fixed pipeline that prepares a company's response to one supplier email.
 
 From the top of the repository:
 
     .venv/bin/python week-05/pipeline.py \
         --email week-05/brookfield-bikes/supplier-emails/01-northgate-controller-delay.eml
     .venv/bin/python week-05/pipeline.py --email <file.eml> --save northgate-pipeline-run.txt
+    .venv/bin/python week-05/pipeline.py --org week-05/copperline-coffee \
+        --email week-05/copperline-coffee/supplier-emails/01-danforth-pump-delay.eml
+
+--org names the company folder (default week-05/brookfield-bikes): its five CSV
+files, supplier-emails/, and prompts/.
 
 The steps always run in this order (the specialists are in specialists.py):
   1. The supply analyst works out which orders are at risk (MCP tools, JSON brief).
@@ -14,7 +19,7 @@ The steps always run in this order (the specialists are in specialists.py):
      option first, so the orders each option affects are listed as a decision.
   3. A reply to the supplier (the writer may answer NO REPLY NEEDED).
 Every draft goes through the review step. Drafts are saved to
-week-05/drafts/<email>-pipeline-<time>/ and never sent.
+week-05/drafts/<company folder>/<email>-pipeline-<time>/ and never sent.
 
 At the end it prints a summary: drafts saved, drafts marked for a person,
 decisions for a person, and total tokens; summary.txt in the same folder has
@@ -32,8 +37,9 @@ from specialists import Specialists, brief_decisions, print_summary
 
 async def run_pipeline(client, data_dir: Path, email: Email) -> bool:
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    out_dir = DRAFTS_DIR / f"{email.path.stem}-pipeline-{stamp}"
+    out_dir = DRAFTS_DIR / data_dir.name / f"{email.path.stem}-pipeline-{stamp}"
     team = Specialists(client, data_dir, out_dir, coordinator="pipeline")
+    print(f"Company: {team.company} ({data_dir.name})")
     print(f"Email:   {email.path}\nFrom:    {email.message.get('From', email.sender)}\nSubject: {email.subject}")
 
     drafts = []
@@ -68,11 +74,11 @@ async def run_pipeline(client, data_dir: Path, email: Email) -> bool:
         else:
             drafts.insert(0, reply)
 
-    print_summary(team, email, out_dir, drafts, decisions, skipped,
+    print_summary(team, email, out_dir, drafts, decisions, skipped, brief,
                   save=bool(drafts) or brief is not None)
     return brief is not None
 
 
 if __name__ == "__main__":
-    run_cli("Prepare Brookfield's response to one supplier email with a fixed pipeline of specialists.",
+    run_cli("Prepare a company's response to one supplier email with a fixed pipeline of specialists.",
             run_pipeline)

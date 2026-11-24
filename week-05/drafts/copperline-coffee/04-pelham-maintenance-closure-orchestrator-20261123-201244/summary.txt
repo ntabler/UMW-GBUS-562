@@ -1,0 +1,24 @@
+Email: 04-pelham-maintenance-closure.eml (Plant maintenance closure - PO-5540 not affected)
+Coordinator: orchestrator
+Orchestrator's summary: Pelham Fittings notified of a one-week plant maintenance closure in four weeks, but confirmed PO-5540 (60 SW-3 steam wands) ships before the closure and will arrive on schedule. No customer orders are at risk and no reply or action is needed. No decision required from a person.
+Orchestrator says a person must decide: no
+
+Check the analyst's reading against the supplier's own words:
+  Supplier wrote:
+    "A quick note for your planning: our plant will close for one week of annual maintenance, starting four weeks from today."
+    "Your open order, PO-5540 for 60 SW-3 steam wands, ships before the closure and will arrive on the scheduled date."
+  Analyst's reading: none (no checked brief)
+
+Drafts saved: none
+
+Drafts marked for a person: none
+
+Decisions for a person: none
+
+Skipped:
+  - Supply analyst: the orchestrator did not run it.
+  - Supplier reply: the orchestrator did not draft one.
+
+Tokens:
+  orchestrator: 1 call(s), 1681 input, 209 output tokens
+  Total: 1681 input, 209 output tokens

@@ -1,0 +1,27 @@
+DRAFT - NOT SENT
+To: v.lindqvist@marlowmetal.example
+Subject: Re: PO-5520 - BL-12 boilers - please choose a shipping option
+For a person: no
+  (none)
+Source email: 02-marlow-boiler-options.eml
+Coordinator: pipeline
+
+Reviews:
+  Draft 1: REVISE
+  3. The draft describes customer order details (shortfall quantities, readiness dates tied to specific affected orders) to the supplier — this effectively describes customer orders' impact. Remove references to "short by 5 units against an affected order" and "short by 40 units against another order" — these details about internal customer orders should not be shared with the supplier.
+  Draft 2: APPROVE
+
+-----
+Hi Victor,
+
+Thanks for the heads-up on PO-5520. To confirm our understanding:
+
+- Option A: 80 units on day 7, remaining 120 on day 21
+- Option B: all 200 units together on day 13
+
+Both options have downstream impact on our schedules, so we're working through the implications internally.
+
+We'll confirm our choice within your three-business-day window. In the meantime, if there's any way to increase the quantity shipped on the first date under either option, that would help reduce the impact on our side — please let us know if that's feasible.
+
+Best regards,
+Purchasing, Copperline Coffee Machines

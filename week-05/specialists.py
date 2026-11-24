@@ -1,4 +1,11 @@
-"""The four Brookfield specialists, shared by both coordinators.
+"""The four specialists, shared by both coordinators, for any company folder.
+
+On its own, this file runs just the supply analyst and prints its brief:
+
+    .venv/bin/python week-05/specialists.py --org week-05/copperline-coffee \
+        --email week-05/copperline-coffee/supplier-emails/01-danforth-pump-delay.eml
+
+In code:
 
     team = Specialists(client, data_dir, out_dir)
     brief  = await team.run_analyst(email)                    # agent + supply MCP tools
@@ -9,7 +16,8 @@
     draft = await team.prepare_supplier_reply(email, brief)   # the review step, then save
     draft = await team.prepare_customer_notice(brief, "O-1043")
 
-Each specialist reads its system prompt from <data_dir>/prompts/ on every call.
+data_dir is the company folder (--org): its five CSV files and prompts/. Each
+specialist reads its system prompt from <data_dir>/prompts/ on every call.
 The model is common.MODEL (claude-sonnet-5).
 
 The review step: write, review, and on REVISE send the reasons back to the
@@ -20,7 +28,10 @@ customer notice) the order has a late penalty. Drafts are only saved to files
 in week-05/drafts/. Nothing can be sent.
 
 Every handoff (what goes from one step to the next) and the tokens each call
-uses are printed; usage_lines() gives the totals by specialist.
+uses are printed; usage_lines() gives the totals by specialist. The analyst's
+brief is printed in full, and after each review step the final draft is printed
+once, between a FINAL DRAFT TO SUPPLIER (or TO CUSTOMER <order id>) line and a
+"Marked for a person: yes/no" line.
 """
 
 from __future__ import annotations
@@ -141,6 +152,7 @@ class Specialists:
         self.client = client
         self.data_dir = data_dir
         self.data = supply_data.load(data_dir)
+        self.company = self.data.company
         self.out_dir = out_dir
         self.coordinator = coordinator
         self.usage = Usage()
@@ -185,7 +197,7 @@ class Specialists:
                         return text, is_error
 
                     messages = [{"role": "user", "content": (
-                        "Work out how this supplier email affects Brookfield's customer orders. Today is "
+                        f"Work out how this supplier email affects {self.company}'s customer orders. Today is "
                         "day 0; get_part shows when each purchase order is scheduled to arrive, in days "
                         "from today. A week is 7 days.\n\n" + email.as_text())}]
                     calls = 0
@@ -215,7 +227,9 @@ class Specialists:
             handoff("supply analyst", self.coordinator, "no usable brief", "\n".join(problems))
             return None
         handoff("supply analyst", self.coordinator, f"brief ({len(brief['orders_at_risk'])} order(s) at risk, "
-                f"{calls} tool call(s))", json.dumps(brief, indent=2))
+                f"{calls} tool call(s))")
+        print("\nANALYST'S BRIEF\n" + json.dumps(brief, indent=2))
+        sys.stdout.flush()
         return brief
 
     # --- 2. Supplier writer ---
@@ -251,7 +265,7 @@ class Specialists:
                                    revise: tuple[str, str] | None = None) -> str:
         """One model call. revise is (the previous draft, the reviewer's reasons)."""
         facts = self.supplier_brief(brief)
-        content = ("Draft Brookfield's reply to this supplier email, using the supply analyst's brief.\n\n"
+        content = (f"Draft {self.company}'s reply to this supplier email, using the supply analyst's brief.\n\n"
                    f"{email.as_text()}\n\n<brief>\n{json.dumps(facts, indent=2)}\n</brief>")
         if revise:
             content += f"\n\nYour previous draft:\n<draft>\n{revise[0]}\n</draft>\n\nA reviewer asked for changes:\n{revise[1]}\n\nWrite the full revised draft."
@@ -270,8 +284,8 @@ class Specialists:
         return {
             "customer": row["customer"],
             "order_id": row["order_id"],
-            "model": row["model"],
-            "quantity": row["qty"],
+            "product": row["product"],
+            "quantity": row["quantity"],
             "planned_ship_day": entry["ship_day"],
             "expected_ship_day": entry["ready_day"],
             "days_later_than_planned": None if entry["ready_day"] is None else entry["ready_day"] - entry["ship_day"],
@@ -344,7 +358,12 @@ class Specialists:
         print(f"\n[code check] {'passed' if not code_problems else '; '.join(code_problems)}")
         return Draft(recipient, "", "", text, approved, reviews, code_problems)
 
-    def _save(self, draft: Draft, filename: str, source: str) -> Draft:
+    @staticmethod
+    def print_final(label: str, text: str, for_person: bool) -> None:
+        print(f"\n{label}\n{text.strip()}\nMarked for a person: {'yes' if for_person else 'no'}")
+        sys.stdout.flush()
+
+    def _save(self, draft: Draft, filename: str, source: str, label: str) -> Draft:
         if not draft.approved:
             draft.person_reasons.append(f"The reviewer did not approve it after {MAX_REVISIONS} revisions.")
         draft.person_reasons += [f"Code check: it {p}." for p in draft.code_problems]
@@ -360,6 +379,7 @@ class Specialists:
             "\n-----\n" + draft.text.strip() + "\n",
             encoding="utf-8")
         print(f"\nSaved{' (FOR A PERSON)' if draft.for_person else ''}: {relative(draft.path)}")
+        self.print_final(label, draft.text, draft.for_person)
         return draft
 
     async def prepare_supplier_reply(self, email: Email, brief: dict | None) -> Draft | None:
@@ -369,9 +389,10 @@ class Specialists:
         draft = await self._review_step("supplier", "supplier writer",
                                         lambda revise: self.write_supplier_reply(email, brief, revise), facts, email)
         if draft is None:
+            self.print_final("FINAL DRAFT TO SUPPLIER", NO_REPLY, False)
             return None
         draft.to, draft.subject = email.sender, email.reply_subject
-        return self._save(draft, "supplier-reply.txt", email.path.name)
+        return self._save(draft, "supplier-reply.txt", email.path.name, "FINAL DRAFT TO SUPPLIER")
 
     async def prepare_customer_notice(self, brief: dict, order_id: str, source: str = "") -> Draft:
         """Write, review, check, and save the notice for one at-risk order."""
@@ -383,7 +404,7 @@ class Specialists:
         draft.to, draft.subject = row["contact_email"], f"Update on your order {order_id}"
         if row["late_penalty"]:
             draft.person_reasons.append(f"{order_id} has a late penalty.")
-        return self._save(draft, f"notice-{order_id}.txt", source)
+        return self._save(draft, f"notice-{order_id}.txt", source, f"FINAL DRAFT TO CUSTOMER {order_id}")
 
     def usage_lines(self) -> list[str]:
         return self.usage.lines()
@@ -403,14 +424,42 @@ def brief_decisions(brief: dict) -> list[str]:
     return decisions
 
 
+SCHEDULE_WORDS = re.compile(
+    r"\d|\b(scheduled|later|earlier|after|before|weeks?|days?|months?|date|today|tomorrow"
+    r"|ship\w*|arriv\w*|deliver\w*|delay\w*|follow\w*)\b", re.I)
+MAX_SCHEDULE_SENTENCES = 8
+
+
+def schedule_sentences(body: str) -> list[str]:
+    """The supplier's own sentences that give a quantity or a time, found by a
+    text search (no model), so a person can check the analyst's reading of them."""
+    out = []
+    for paragraph in re.split(r"\n\s*\n", body):
+        text = " ".join(paragraph.split())
+        for sentence in re.split(r"(?<=[.!?])\s+", text):
+            if sentence.endswith((".", "!", "?", ":")) and SCHEDULE_WORDS.search(sentence):
+                out.append(sentence)
+    return out[:MAX_SCHEDULE_SENTENCES]
+
+
+def reading_check_lines(email: Email, brief: dict | None) -> list[str]:
+    """The supplier's words beside the analyst's reading of them."""
+    lines = ["Check the analyst's reading against the supplier's own words:", "  Supplier wrote:"]
+    sentences = schedule_sentences(email.body)
+    lines += [f'    "{s}"' for s in sentences] or ["    (no sentences with quantities or dates)"]
+    reading = brief["what_changed"] if brief is not None else "none (no checked brief)"
+    lines.append(f"  Analyst's reading: {reading}")
+    return lines
+
+
 def print_summary(team: Specialists, email: Email, out_dir: Path, drafts: list[Draft],
-                  decisions: list[str], skipped: list[str], extra: list[str] | None = None,
-                  save: bool = True) -> str:
+                  decisions: list[str], skipped: list[str], brief: dict | None,
+                  extra: list[str] | None = None, save: bool = True) -> str:
     """Print the end-of-run summary and, if save, write it to <out_dir>/summary.txt.
     extra is lines that one coordinator adds after its name."""
     heading("Summary")
     lines = [f"Email: {email.path.name} ({email.subject})", f"Coordinator: {team.coordinator}"]
-    lines += (extra or []) + [""]
+    lines += (extra or []) + [""] + reading_check_lines(email, brief) + [""]
     lines.append(f"Drafts saved ({len(drafts)}), in {relative(out_dir)}/:" if drafts else "Drafts saved: none")
     for d in drafts:
         lines.append(f"  - {d.path.name}  to {d.to}  "
@@ -430,3 +479,20 @@ def print_summary(team: Specialists, email: Email, out_dir: Path, drafts: list[D
         out_dir.mkdir(parents=True, exist_ok=True)
         (out_dir / "summary.txt").write_text(text + "\n", encoding="utf-8")
     return text
+
+
+# --- Command line: the supply analyst alone ----------------------------------------------
+
+
+async def _analyst_only(client, data_dir: Path, email: Email) -> bool:
+    team = Specialists(client, data_dir, out_dir=data_dir, coordinator="specialists.py")
+    print(f"Company: {team.company} ({relative(data_dir)})")
+    print("Columns found: " + "; ".join(team.data.column_lines()))
+    brief = await team.run_analyst(email)
+    print("\nTokens:\n" + "\n".join(f"  {u}" for u in team.usage_lines()))
+    return brief is not None
+
+
+if __name__ == "__main__":
+    from common import run_cli
+    run_cli("Run the supply analyst alone on one supplier email and print its brief.", _analyst_only)

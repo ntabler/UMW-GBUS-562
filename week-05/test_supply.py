@@ -91,6 +91,46 @@ class CoverageTests(unittest.TestCase):
                 supply_data.load(folder)
 
 
+COPPERLINE = Path(__file__).resolve().parent / "copperline-coffee"
+
+
+class ColumnTests(unittest.TestCase):
+    def test_brookfield_columns(self):
+        data = supply_data.load()
+        self.assertEqual(data.columns["orders.csv"], {"product": "model", "quantity": "qty", "ship_day": "ship_in_days"})
+        self.assertEqual(data.columns["bill-of-materials.csv"], {"product": "model", "per_unit": "qty_per_bike"})
+        self.assertEqual(data.company, "Brookfield Bikes")
+
+    def test_copperline_columns(self):
+        data = supply_data.load(COPPERLINE)
+        self.assertEqual(data.columns["orders.csv"], {"product": "product", "quantity": "units", "ship_day": "ship_by_day"})
+        self.assertEqual(data.columns["bill-of-materials.csv"], {"product": "product", "per_unit": "per_unit"})
+        self.assertEqual(data.company, "Copperline Coffee")
+
+    def test_copperline_danforth_delay(self):
+        # PU-20: 50 on hand; 40 arrive on day 4 and 160 on day 19 instead of 200 on day 4.
+        # Cafe One needs 1 pump, Cafe Duo 2. By day 12, 90 have arrived but 100 are needed.
+        data = supply_data.load(COPPERLINE)
+        orders = {o["order_id"]: o for o in data.orders_for_part("PU-20")}
+        self.assertEqual(orders["O-2202"]["units_needed"], 30)   # 15 Cafe Duo x 2 pumps
+        result = data.coverage("PU-20", [{"qty": 40, "arrives_in_days": 4}, {"qty": 160, "arrives_in_days": 19}])
+        self.assertEqual(at_risk(result), [("O-2203", 10, 12, 19), ("O-2204", 20, 15, 19), ("O-2205", 25, 17, 19)])
+
+    def test_other_header_names(self):
+        self.assertEqual(supply_data.find_columns("orders.csv", [
+            "order_id", "customer", "contact_email", "Item Name", "Quantity", "Due Day", "late_penalty"]),
+            {"product": "Item Name", "quantity": "Quantity", "ship_day": "Due Day"})
+        self.assertEqual(supply_data.find_columns("bill-of-materials.csv", ["SKU", "part_id", "Parts Per Unit"]),
+                         {"product": "SKU", "per_unit": "Parts Per Unit"})
+
+    def test_unclear_columns_are_an_error(self):
+        with self.assertRaisesRegex(DataError, "more than one column"):
+            supply_data.find_columns("bill-of-materials.csv", ["product", "part_id", "per_unit", "qty_per_box"])
+        with self.assertRaisesRegex(DataError, "ship day.*Its columns are"):
+            supply_data.find_columns("orders.csv", ["order_id", "customer", "contact_email", "product",
+                                                    "units", "late_penalty"])
+
+
 class ServerTests(unittest.TestCase):
     def test_tools_over_stdio(self):
         from mcp import ClientSession, StdioServerParameters
@@ -111,7 +151,7 @@ class ServerTests(unittest.TestCase):
         names, part, cover, bad = asyncio.run(run())
         self.assertEqual(names, ["check_coverage", "get_orders_for_part", "get_part"])
         part_json = json.loads(part.content[0].text)
-        self.assertEqual(part_json["models_using"], [{"model": "Trail 29", "qty_per_bike": 2}])
+        self.assertEqual(part_json["products_using"], [{"product": "Trail 29", "per_unit": 2}])
         self.assertEqual(part_json["scheduled_shipments"][0]["po_number"], "PO-7795")
         self.assertEqual(at_risk(json.loads(cover.content[0].text)), [("O-1046", 40, 9, 12)])
         self.assertTrue(bad.is_error)

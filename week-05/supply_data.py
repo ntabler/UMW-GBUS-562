@@ -1,4 +1,4 @@
-"""Brookfield's supply data: reading the CSV files and working out part coverage.
+"""A company's supply data: reading the CSV files and working out part coverage.
 
 No AI here. Everything the supply analyst reports about stock, shipments, and
 which orders are short comes from these functions, through the MCP server in
@@ -10,8 +10,8 @@ used for an order that ships on day N.
 How coverage is worked out for one part:
   - Supply starts at the stock on hand and grows as each shipment arrives.
   - The open orders that use the part are taken in order of ship day, earliest
-    first (ties by order number). Each one needs its bike quantity times the
-    part's qty_per_bike from the bill of materials.
+    first (ties by order number). Each one needs its product quantity times the
+    part's per-unit count from the bill of materials.
   - Orders are filled complete, one at a time, in that order: no order takes
     parts before every order ahead of it is filled, so a short order holds up
     the ones after it. That is the same as saying an order is covered if, on its
@@ -21,23 +21,32 @@ How coverage is worked out for one part:
     is missing on its ship day, and ready_day is the first day it can ship: the
     first day enough has arrived for it and every order ahead of it (None if
     the arrivals never cover it). ready_day never goes down along the queue.
+
+Column names: a company can name four kinds of column its own way. They are
+worked out from each header row (see find_columns) and renamed on reading:
+  orders.csv              product, quantity, ship_day
+  bill-of-materials.csv   product, per_unit
+For example Brookfield's model / qty / ship_in_days / qty_per_bike and
+Copperline's product / units / ship_by_day / per_unit. The other columns must
+have the names in FILES.
 """
 
 from __future__ import annotations
 
 import csv
-from dataclasses import dataclass
+import re
+from dataclasses import dataclass, field
 from pathlib import Path
 
 WEEK_DIR = Path(__file__).resolve().parent
 DEFAULT_DATA_DIR = WEEK_DIR / "brookfield-bikes"
 
-# Each file and the columns it must have.
+# Each file and the columns it must have under exactly these names.
 FILES = {
     "parts.csv": ["part_id", "description", "on_hand", "supplier"],
     "inbound.csv": ["po_number", "part_id", "supplier", "qty", "arrives_in_days"],
-    "orders.csv": ["order_id", "customer", "contact_email", "model", "qty", "ship_in_days", "late_penalty"],
-    "bill-of-materials.csv": ["model", "part_id", "qty_per_bike"],
+    "orders.csv": ["order_id", "customer", "contact_email", "late_penalty"],
+    "bill-of-materials.csv": ["part_id"],
     "suppliers.csv": ["supplier", "contact_name", "contact_email", "part_id"],
 }
 
@@ -46,14 +55,67 @@ class DataError(Exception):
     """A data file is missing or malformed, or a tool was given bad input."""
 
 
+# --- Working out the columns that companies name differently -------------------
+
+# A header's words: lower case, split on anything that is not a letter or digit.
+PRODUCT_WORDS = {"product", "model", "item", "sku", "machine"}
+QUANTITY_WORDS = {"qty", "quantity", "units", "count", "amount", "bikes", "machines"}
+SHIP_WORDS = {"ship", "shipping", "ships", "due", "deliver", "delivery"}
+
+# For each file, each role and a test on a header's words.
+ROLES = {
+    "orders.csv": {
+        "product": lambda w: bool(w & PRODUCT_WORDS) and not w & SHIP_WORDS,
+        "quantity": lambda w: bool(w & QUANTITY_WORDS) and "per" not in w and not w & SHIP_WORDS,
+        "ship_day": lambda w: bool(w & SHIP_WORDS),
+    },
+    "bill-of-materials.csv": {
+        "product": lambda w: bool(w & PRODUCT_WORDS) and "per" not in w,
+        "per_unit": lambda w: "per" in w or bool(w & QUANTITY_WORDS),
+    },
+}
+
+
+def header_words(name: str) -> set[str]:
+    return set(re.split(r"[^a-z0-9]+", name.lower())) - {""}
+
+
+def find_columns(file_name: str, headers: list[str]) -> dict[str, str]:
+    """Which header holds each role in this file, as {role: header}. Only headers
+    outside the fixed ones in FILES are considered, and each role must match
+    exactly one of them, or a DataError names the columns it saw."""
+    fixed = set(FILES[file_name])
+    free = [h for h in headers if h not in fixed]
+    found: dict[str, str] = {}
+    for role, test in ROLES[file_name].items():
+        matches = [h for h in free if test(header_words(h)) and h not in found.values()]
+        if len(matches) != 1:
+            problem = "no column" if not matches else f"more than one column ({', '.join(matches)})"
+            raise DataError(f"{file_name}: could not tell which column holds the {role.replace('_', ' ')}: "
+                            f"{problem} looks like it. Its columns are: {', '.join(headers)}.")
+        found[role] = matches[0]
+    return found
+
+
 @dataclass
 class SupplyData:
     folder: Path
     parts: dict[str, dict]            # part_id -> row
     inbound: list[dict]               # one row per purchase order
-    orders: list[dict]                # one row per open customer order
-    bom: list[dict]                   # model, part_id, qty_per_bike
+    orders: list[dict]                # one row per open customer order (product, quantity, ship_day, ...)
+    bom: list[dict]                   # product, part_id, per_unit
     suppliers: list[dict]             # one row per supplier contact
+    columns: dict[str, dict[str, str]] = field(default_factory=dict)   # file -> {role: its header there}
+
+    @property
+    def company(self) -> str:
+        """A display name from the folder name: brookfield-bikes -> Brookfield Bikes."""
+        return " ".join(w.capitalize() for w in re.split(r"[-_\s]+", self.folder.name) if w)
+
+    def column_lines(self) -> list[str]:
+        """What find_columns decided, one line per file."""
+        return [f"{name}: " + ", ".join(f"{role} = {header}" for role, header in found.items())
+                for name, found in self.columns.items()]
 
     # --- Lookups ---------------------------------------------------------------
 
@@ -83,17 +145,17 @@ class SupplyData:
     def orders_for_part(self, part_id: str) -> list[dict]:
         """The open orders that use the part, earliest ship day first."""
         part_id = self.part(part_id)["part_id"]
-        per_bike = {row["model"]: row["qty_per_bike"] for row in self.bom if row["part_id"] == part_id}
+        per_unit = {row["product"]: row["per_unit"] for row in self.bom if row["part_id"] == part_id}
         found = []
         for row in self.orders:
-            if row["model"] in per_bike:
+            if row["product"] in per_unit:
                 found.append({
                     "order_id": row["order_id"],
                     "customer": row["customer"],
-                    "model": row["model"],
-                    "bikes": row["qty"],
-                    "units_needed": row["qty"] * per_bike[row["model"]],
-                    "ship_day": row["ship_in_days"],
+                    "product": row["product"],
+                    "quantity": row["quantity"],
+                    "units_needed": row["quantity"] * per_unit[row["product"]],
+                    "ship_day": row["ship_day"],
                     "late_penalty": row["late_penalty"],
                 })
         found.sort(key=lambda o: (o["ship_day"], o["order_id"]))
@@ -101,9 +163,9 @@ class SupplyData:
 
     # --- Coverage -------------------------------------------------------------
 
-    def models_using(self, part_id: str) -> list[dict]:
+    def products_using(self, part_id: str) -> list[dict]:
         part_id = self.part(part_id)["part_id"]
-        return [{"model": r["model"], "qty_per_bike": r["qty_per_bike"]} for r in self.bom if r["part_id"] == part_id]
+        return [{"product": r["product"], "per_unit": r["per_unit"]} for r in self.bom if r["part_id"] == part_id]
 
     def coverage(self, part_id: str, arrivals: list[dict] | None = None) -> dict:
         """Coverage of every open order for the part.
@@ -166,15 +228,25 @@ class SupplyData:
 # --- Reading the files -----------------------------------------------------------
 
 
-def _read(folder: Path, name: str) -> list[dict]:
+def _read(folder: Path, name: str, columns: dict[str, dict[str, str]] | None = None) -> list[dict]:
+    """The file's rows. In a file listed in ROLES, the role columns are renamed to
+    their role (product, quantity, ...), and what was found goes in columns[name]."""
     path = folder / name
     try:
         with path.open(newline="", encoding="utf-8-sig") as handle:
             reader = csv.DictReader(handle)
-            missing = [c for c in FILES[name] if c not in (reader.fieldnames or [])]
+            headers = [h.strip() for h in (reader.fieldnames or [])]
+            missing = [c for c in FILES[name] if c not in headers]
             if missing:
                 raise DataError(f"{path} is missing the column(s): {', '.join(missing)}.")
-            return [{k: (v or "").strip() for k, v in row.items()} for row in reader if any(row.values())]
+            rename: dict[str, str] = {}
+            if name in ROLES:
+                found = find_columns(name, headers)
+                if columns is not None:
+                    columns[name] = found
+                rename = {header: role for role, header in found.items()}
+            return [{rename.get(k.strip(), k.strip()): (v or "").strip() for k, v in row.items() if k is not None}
+                    for row in reader if any(row.values())]
     except OSError as error:
         raise DataError(f"Could not read {path}: {error}") from error
 
@@ -212,17 +284,18 @@ def load(folder: str | Path | None = None) -> SupplyData:
         row["qty"] = _whole(row["qty"], f"inbound.csv {row['po_number']} qty")
         row["arrives_in_days"] = _whole(row["arrives_in_days"], f"inbound.csv {row['po_number']} arrives_in_days")
 
-    orders = _read(folder, "orders.csv")
+    columns: dict[str, dict[str, str]] = {}
+    orders = _read(folder, "orders.csv", columns)
     for row in orders:
         where = f"orders.csv {row['order_id']}"
-        row["qty"] = _whole(row["qty"], f"{where} qty")
-        row["ship_in_days"] = _whole(row["ship_in_days"], f"{where} ship_in_days")
+        row["quantity"] = _whole(row["quantity"], f"{where} {columns['orders.csv']['quantity']}")
+        row["ship_day"] = _whole(row["ship_day"], f"{where} {columns['orders.csv']['ship_day']}")
         row["late_penalty"] = _yes_no(row["late_penalty"], where)
 
-    bom = _read(folder, "bill-of-materials.csv")
+    bom = _read(folder, "bill-of-materials.csv", columns)
     for row in bom:
         row["part_id"] = row["part_id"].upper()
-        row["qty_per_bike"] = _whole(row["qty_per_bike"], f"bill-of-materials.csv {row['model']} {row['part_id']}")
+        row["per_unit"] = _whole(row["per_unit"], f"bill-of-materials.csv {row['product']} {row['part_id']}")
 
     suppliers = _read(folder, "suppliers.csv")
     for row in suppliers:
@@ -232,4 +305,4 @@ def load(folder: str | Path | None = None) -> SupplyData:
         if row["part_id"] not in parts:
             raise DataError(f"Part {row['part_id']} is used in the data but is not in parts.csv.")
 
-    return SupplyData(folder, parts, inbound, orders, bom, suppliers)
+    return SupplyData(folder, parts, inbound, orders, bom, suppliers, columns)

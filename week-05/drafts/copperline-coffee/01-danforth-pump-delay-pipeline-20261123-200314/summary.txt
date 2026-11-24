@@ -1,0 +1,33 @@
+Email: 01-danforth-pump-delay.eml (PO-5512 - PU-20 pumps - partial shipment)
+Coordinator: pipeline
+
+Check the analyst's reading against the supplier's own words:
+  Supplier wrote:
+    "I'm writing about PO-5512 for 200 PU-20 vibration pumps."
+    "A test rig on our assembly line failed inspection, and we can't release the full order on the scheduled date."
+    "We can deliver 40 of the 200 pumps on the scheduled date."
+    "The other 160 will follow 15 days later."
+    "We'll do our best to keep the delay as short as we can."
+  Analyst's reading: PO-5512 will now arrive as 40 pumps on day 4 (as originally scheduled) and the remaining 160 pumps on day 19 (15 days later), instead of all 200 on day 4.
+
+Drafts saved (4), in week-05/drafts/copperline-coffee/01-danforth-pump-delay-pipeline-20261123-200314/:
+  - supplier-reply.txt  to d.kessler@danforthpump.example  (reviewer approved)
+  - notice-O-2203.txt  to dining@elmstate.example  (FOR A PERSON)
+  - notice-O-2204.txt  to owner@kettleandcrumb.example  (reviewer approved)
+  - notice-O-2205.txt  to hello@tallpinescoffee.example  (FOR A PERSON)
+
+Drafts marked for a person (2):
+  - notice-O-2203.txt: O-2203 has a late penalty.
+  - notice-O-2205.txt: O-2205 has a late penalty.
+
+Decisions for a person (3):
+  - Decide whether to accept the split shipment (40 now, 160 on day 19) or seek expediting/alternate sourcing to protect O-2203 and O-2205, which carry late penalties.
+  - Decide whether/how to respond to Danforth's request for the list of customer orders/quantities tied to this PO, given customer confidentiality considerations.
+  - Supplier asked: Danforth asked for a list of the customer orders these pumps are for, with each customer's name and quantity.
+
+Tokens:
+  supply analyst: 3 call(s), 9557 input, 773 output tokens
+  customer writer: 4 call(s), 1789 input, 661 output tokens
+  reviewer: 6 call(s), 5220 input, 627 output tokens
+  supplier writer: 2 call(s), 2530 input, 607 output tokens
+  Total: 19096 input, 2668 output tokens

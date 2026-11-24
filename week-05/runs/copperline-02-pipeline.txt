@@ -1,0 +1,218 @@
+Company: Copperline Coffee (copperline-coffee)
+Email:   week-05/copperline-coffee/supplier-emails/02-marlow-boiler-options.eml
+From:    Victor Lindqvist <v.lindqvist@marlowmetal.example>
+Subject: PO-5520 - BL-12 boilers - please choose a shipping option
+
+--- Supply analyst ----------------------------------------------------
+
+>>> HANDOFF  pipeline -> supply analyst: supplier email 02-marlow-boiler-options.eml
+    | <email>
+    | From: Victor Lindqvist <v.lindqvist@marlowmetal.example>
+    | Subject: PO-5520 - BL-12 boilers - please choose a shipping option
+    | 
+    | Hi,
+    | 
+    | About PO-5520 for 200 BL-12 boilers: our welding cell is running at half
+    | capacity this month, so we can't ship the whole order on time. We can offer
+    | two options:
+    | 
+    | Option A: Ship 80 boilers on the scheduled date, and the remaining 120 two
+    | weeks after that.
+    | 
+    | Option B: Ship all 200 boilers together, six days after the scheduled date.
+    | 
+    | Please let us know which option you'd like within three business days. If we
+    | don't hear from you by then, we'll go with Option B.
+    | 
+    | Regards,
+    | Victor Lindqvist
+    | Sales Coordinator, Marlow Metalworks
+    | </email>
+[supply server] copperline-coffee: 4 parts, 4 purchase orders, 10 open orders
+[supply server] columns in orders.csv: product = product, quantity = units, ship_day = ship_by_day
+[supply server] columns in bill-of-materials.csv: product = product, per_unit = per_unit
+  (supply analyst: 1964 input, 106 output tokens)
+
+[supply analyst step 1] get_part
+  inputs: {"part_id": "BL-12"}
+  result: { "part_id": "BL-12", "description": "1.2-liter boiler", "on_hand": 60, "supplier": "Marlow Metalworks", "products_using": [ { "product": "Cafe One", "per_unit": 1 }, { "product": "Cafe Duo", "per_unit": 2 } ], "scheduled_shipments": [ { "po_number": "PO-5520", "part_id": "BL-12", "supplier": "Marlo...
+
+[supply analyst step 2] get_orders_for_part
+  inputs: {"part_id": "BL-12"}
+  result: { "part_id": "BL-12", "orders": [ { "order_id": "O-2201", "customer": "Morning Ritual Cafe", "product": "Cafe One", "quantity": 20, "units_needed": 20, "ship_day": 6, "late_penalty": false }, { "order_id": "O-2202", "customer": "Harbor Hotel Group", "product": "Cafe Duo", "quantity": 15, "units_need...
+  (supply analyst: 3032 input, 216 output tokens)
+
+[supply analyst step 3] check_coverage
+  inputs: {"part_id": "BL-12", "arrivals": [{"qty": 80, "arrives_in_days": 7}, {"qty": 120, "arrives_in_days": 21}]}
+  result: { "part_id": "BL-12", "on_hand": 60, "shipments": [ { "qty": 80, "arrives_in_days": 7 }, { "qty": 120, "arrives_in_days": 21 } ], "orders": [ { "order_id": "O-2201", "customer": "Morning Ritual Cafe", "product": "Cafe One", "quantity": 20, "units_needed": 20, "ship_day": 6, "late_penalty": false, "c...
+
+[supply analyst step 4] check_coverage
+  inputs: {"part_id": "BL-12", "arrivals": [{"qty": 200, "arrives_in_days": 13}]}
+  result: { "part_id": "BL-12", "on_hand": 60, "shipments": [ { "qty": 200, "arrives_in_days": 13 } ], "orders": [ { "order_id": "O-2201", "customer": "Morning Ritual Cafe", "product": "Cafe One", "quantity": 20, "units_needed": 20, "ship_day": 6, "late_penalty": false, "covered": true, "units_short": 0, "rea...
+  (supply analyst: 5613 input, 514 output tokens)
+
+Code checks rejected the brief:
+  - Each option needs a name and a list of order_ids.
+  - Each option needs a name and a list of order_ids.
+
+>>> HANDOFF  code checks -> supply analyst: problems to fix
+    | Each option needs a name and a list of order_ids.
+    | Each option needs a name and a list of order_ids.
+  (supply analyst: 6201 input, 506 output tokens)
+
+>>> HANDOFF  supply analyst -> pipeline: brief (0 order(s) at risk, 4 tool call(s))
+
+ANALYST'S BRIEF
+{
+  "part_id": "BL-12",
+  "what_changed": "PO-5520 (200 BL-12 boilers, originally due day 7) will now be split or delayed: Option A ships 80 units on day 7 and the remaining 120 on day 21, while Option B ships all 200 units together on day 13.",
+  "orders_at_risk": [],
+  "options": [
+    {
+      "name": "Option A (80 on day 7, 120 on day 21)",
+      "order_ids": [
+        "O-2205"
+      ]
+    },
+    {
+      "name": "Option B (200 together on day 13)",
+      "order_ids": [
+        "O-2203"
+      ]
+    }
+  ],
+  "decisions_for_a_person": [
+    "Choose between Option A and Option B within the supplier's 3-business-day deadline, since the default (Option B) risks a late, penalty-bearing order (O-2203, Elm State University Dining) whereas Option A risks a different late, penalty-bearing order (O-2205, Tall Pines Coffee House).",
+    "Option A: O-2205 (Tall Pines Coffee House) would be short 5 units, ship_day 17, ready_day 21, late_penalty true.",
+    "Option B: O-2203 (Elm State University Dining) would be short 40 units, ship_day 12, ready_day 13, late_penalty true."
+  ],
+  "supplier_questions": [
+    "Which shipping option (A or B) would Copperline like for PO-5520, to be confirmed within three business days?"
+  ]
+}
+
+>>> HANDOFF  pipeline -> customer writer: skipped: options are undecided
+
+--- Supplier reply ----------------------------------------------------
+
+>>> HANDOFF  pipeline -> supplier writer: facts to write from
+    | {
+    |   "part_id": "BL-12",
+    |   "what_changed": "PO-5520 (200 BL-12 boilers, originally due day 7) will now be split or delayed: Option A ships 80 units on day 7 and the remaining 120 on day 21, while Option B ships all 200 units together on day 13.",
+    |   "orders_at_risk": [],
+    |   "options": [
+    |     {
+    |       "name": "Option A (80 on day 7, 120 on day 21)",
+    |       "orders_at_risk": 1
+    |     },
+    |     {
+    |       "name": "Option B (200 together on day 13)",
+    |       "orders_at_risk": 1
+    |     }
+    |   ],
+    |   "decisions_for_a_person": [
+    |     "Choose between Option A and Option B within the supplier's 3-business-day deadline, since the default (Option B) risks a late, penalty-bearing order ([an order], [a customer]) whereas Option A risks a different late, penalty-bearing order ([an order], [a customer]).",
+    |     "Option A: [an order] ([a customer]) would be short 5 units, ship_day 17, ready_day 21, late_penalty true.",
+    |     "Option B: [an order] ([a customer]) would be short 40 units, ship_day 12, ready_day 13, late_penalty true."
+    |   ],
+    |   "supplier_questions": [
+    |     "Which shipping option (A or B) would Copperline like for PO-5520, to be confirmed within three business days?"
+    |   ]
+    | }
+  (supplier writer: 1063 input, 259 output tokens)
+
+[supplier writer, draft 1]
+Hi Victor,
+
+Thanks for the heads-up on PO-5520. To confirm our understanding:
+
+- Option A: 80 units on day 7, remaining 120 on day 21
+- Option B: all 200 units together on day 13
+
+Both options carry downstream impact on our end — Option A leaves us short by 5 units against an affected order, with readiness pushed to day 21; Option B leaves us short by 40 units against another order, with readiness on day 13. Either way, we're working through the implications internally.
+
+We'll confirm our choice within your three-business-day window. In the meantime, if there's any way to increase the quantity shipped on the first date under either option, that would help reduce the impact on our side — please let us know if that's feasible.
+
+Best regards,
+Purchasing, Copperline Coffee Machines
+
+>>> HANDOFF  supplier writer -> reviewer: draft 1
+  (reviewer: 1352 input, 113 output tokens)
+
+>>> HANDOFF  reviewer -> supplier writer: REVISE
+    | 3. The draft describes customer order details (shortfall quantities, readiness dates tied to specific affected orders) to the supplier — this effectively describes customer orders' impact. Remove references to "short by 5 units against an affected order" and "short by 40 units against another order" — these details about internal customer orders should not be shared with the supplier.
+  (supplier writer: 1468 input, 200 output tokens)
+
+[supplier writer, draft 2]
+Hi Victor,
+
+Thanks for the heads-up on PO-5520. To confirm our understanding:
+
+- Option A: 80 units on day 7, remaining 120 on day 21
+- Option B: all 200 units together on day 13
+
+Both options have downstream impact on our schedules, so we're working through the implications internally.
+
+We'll confirm our choice within your three-business-day window. In the meantime, if there's any way to increase the quantity shipped on the first date under either option, that would help reduce the impact on our side — please let us know if that's feasible.
+
+Best regards,
+Purchasing, Copperline Coffee Machines
+
+>>> HANDOFF  supplier writer -> reviewer: draft 2
+  (reviewer: 1293 input, 7 output tokens)
+
+>>> HANDOFF  reviewer -> pipeline: APPROVE
+
+[code check] passed
+
+Saved: week-05/drafts/copperline-coffee/02-marlow-boiler-options-pipeline-20261123-195509/supplier-reply.txt
+
+FINAL DRAFT TO SUPPLIER
+Hi Victor,
+
+Thanks for the heads-up on PO-5520. To confirm our understanding:
+
+- Option A: 80 units on day 7, remaining 120 on day 21
+- Option B: all 200 units together on day 13
+
+Both options have downstream impact on our schedules, so we're working through the implications internally.
+
+We'll confirm our choice within your three-business-day window. In the meantime, if there's any way to increase the quantity shipped on the first date under either option, that would help reduce the impact on our side — please let us know if that's feasible.
+
+Best regards,
+Purchasing, Copperline Coffee Machines
+Marked for a person: no
+
+--- Summary -----------------------------------------------------------
+Email: 02-marlow-boiler-options.eml (PO-5520 - BL-12 boilers - please choose a shipping option)
+Coordinator: pipeline
+
+Check the analyst's reading against the supplier's own words:
+  Supplier wrote:
+    "About PO-5520 for 200 BL-12 boilers: our welding cell is running at half capacity this month, so we can't ship the whole order on time."
+    "Option A: Ship 80 boilers on the scheduled date, and the remaining 120 two weeks after that."
+    "Option B: Ship all 200 boilers together, six days after the scheduled date."
+    "Please let us know which option you'd like within three business days."
+  Analyst's reading: PO-5520 (200 BL-12 boilers, originally due day 7) will now be split or delayed: Option A ships 80 units on day 7 and the remaining 120 on day 21, while Option B ships all 200 units together on day 13.
+
+Drafts saved (1), in week-05/drafts/copperline-coffee/02-marlow-boiler-options-pipeline-20261123-195509/:
+  - supplier-reply.txt  to v.lindqvist@marlowmetal.example  (reviewer approved)
+
+Drafts marked for a person: none
+
+Decisions for a person (6):
+  - Choose between Option A and Option B within the supplier's 3-business-day deadline, since the default (Option B) risks a late, penalty-bearing order (O-2203, Elm State University Dining) whereas Option A risks a different late, penalty-bearing order (O-2205, Tall Pines Coffee House).
+  - Option A: O-2205 (Tall Pines Coffee House) would be short 5 units, ship_day 17, ready_day 21, late_penalty true.
+  - Option B: O-2203 (Elm State University Dining) would be short 40 units, ship_day 12, ready_day 13, late_penalty true.
+  - Supplier asked: Which shipping option (A or B) would Copperline like for PO-5520, to be confirmed within three business days?
+  - Choose an option. Option A (80 on day 7, 120 on day 21) puts at risk: O-2205.
+  - Choose an option. Option B (200 together on day 13) puts at risk: O-2203.
+
+Skipped:
+  - Customer notices: the supplier offered options, so no notice is drafted until a person chooses one.
+
+Tokens:
+  supply analyst: 4 call(s), 16810 input, 1342 output tokens
+  supplier writer: 2 call(s), 2531 input, 459 output tokens
+  reviewer: 2 call(s), 2645 input, 120 output tokens
+  Total: 21986 input, 1921 output tokens

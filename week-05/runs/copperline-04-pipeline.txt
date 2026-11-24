@@ -1,0 +1,129 @@
+Company: Copperline Coffee (copperline-coffee)
+Email:   week-05/copperline-coffee/supplier-emails/04-pelham-maintenance-closure.eml
+From:    Owen Brady <o.brady@pelhamfittings.example>
+Subject: Plant maintenance closure - PO-5540 not affected
+
+--- Supply analyst ----------------------------------------------------
+
+>>> HANDOFF  pipeline -> supply analyst: supplier email 04-pelham-maintenance-closure.eml
+    | <email>
+    | From: Owen Brady <o.brady@pelhamfittings.example>
+    | Subject: Plant maintenance closure - PO-5540 not affected
+    | 
+    | Hello,
+    | 
+    | A quick note for your planning: our plant will close for one week of annual
+    | maintenance, starting four weeks from today.
+    | 
+    | Your open order, PO-5540 for 60 SW-3 steam wands, ships before the closure
+    | and will arrive on the scheduled date. No action is needed on your side.
+    | 
+    | Kind regards,
+    | Owen Brady
+    | Customer Care, Pelham Fittings
+    | </email>
+[supply server] copperline-coffee: 4 parts, 4 purchase orders, 10 open orders
+[supply server] columns in orders.csv: product = product, quantity = units, ship_day = ship_by_day
+[supply server] columns in bill-of-materials.csv: product = product, per_unit = per_unit
+  (supply analyst: 1879 input, 137 output tokens)
+
+[supply analyst step 1] get_part
+  inputs: {"part_id": "SW-3"}
+  result: { "part_id": "SW-3", "description": "Steam wand", "on_hand": 40, "supplier": "Pelham Fittings", "products_using": [ { "product": "Cafe Duo", "per_unit": 1 } ], "scheduled_shipments": [ { "po_number": "PO-5540", "part_id": "SW-3", "supplier": "Pelham Fittings", "qty": 60, "arrives_in_days": 11 } ], "...
+
+[supply analyst step 2] get_orders_for_part
+  inputs: {"part_id": "SW-3"}
+  result: { "part_id": "SW-3", "orders": [ { "order_id": "O-2202", "customer": "Harbor Hotel Group", "product": "Cafe Duo", "quantity": 15, "units_needed": 15, "ship_day": 9, "late_penalty": false }, { "order_id": "O-2204", "customer": "Kettle & Crumb Bakery", "product": "Cafe Duo", "quantity": 10, "units_nee...
+  (supply analyst: 2580 input, 140 output tokens)
+
+[supply analyst step 3] check_coverage
+  inputs: {"part_id": "SW-3", "arrivals": [{"qty": 60, "arrives_in_days": 11}]}
+  result: { "part_id": "SW-3", "on_hand": 40, "shipments": [ { "qty": 60, "arrives_in_days": 11 } ], "orders": [ { "order_id": "O-2202", "customer": "Harbor Hotel Group", "product": "Cafe Duo", "quantity": 15, "units_needed": 15, "ship_day": 9, "late_penalty": false, "covered": true, "units_short": 0, "ready_...
+  (supply analyst: 3211 input, 127 output tokens)
+
+>>> HANDOFF  supply analyst -> pipeline: brief (0 order(s) at risk, 3 tool call(s))
+
+ANALYST'S BRIEF
+{
+  "part_id": "SW-3",
+  "what_changed": "No change: PO-5540 (60 units) still arrives on day 11, ahead of the supplier's planned one-week plant closure starting on day 28.",
+  "orders_at_risk": [],
+  "options": [],
+  "decisions_for_a_person": [],
+  "supplier_questions": []
+}
+
+>>> HANDOFF  pipeline -> customer writer: skipped: no orders at risk
+
+--- Supplier reply ----------------------------------------------------
+
+>>> HANDOFF  pipeline -> supplier writer: facts to write from
+    | {
+    |   "part_id": "SW-3",
+    |   "what_changed": "No change: PO-5540 (60 units) still arrives on day 11, ahead of the supplier's planned one-week plant closure starting on day 28.",
+    |   "orders_at_risk": [],
+    |   "options": [],
+    |   "decisions_for_a_person": [],
+    |   "supplier_questions": []
+    | }
+  (supplier writer: 627 input, 169 output tokens)
+
+[supplier writer, draft 1]
+Subject: Re: Plant maintenance closure - PO-5540 not affected
+
+Hello Owen,
+
+Thanks for the heads-up. We confirm our understanding: PO-5540 (60 SW-3 steam wands) remains on schedule for delivery on day 11, ahead of your planned closure starting day 28. No impact to our orders expected.
+
+We'll continue to monitor on our end — please let us know if anything changes with the ship date.
+
+Best regards,
+Purchasing, Copperline Coffee Machines
+
+>>> HANDOFF  supplier writer -> reviewer: draft 1
+  (reviewer: 826 input, 7 output tokens)
+
+>>> HANDOFF  reviewer -> pipeline: APPROVE
+
+[code check] passed
+
+Saved: week-05/drafts/copperline-coffee/04-pelham-maintenance-closure-pipeline-20261123-201235/supplier-reply.txt
+
+FINAL DRAFT TO SUPPLIER
+Subject: Re: Plant maintenance closure - PO-5540 not affected
+
+Hello Owen,
+
+Thanks for the heads-up. We confirm our understanding: PO-5540 (60 SW-3 steam wands) remains on schedule for delivery on day 11, ahead of your planned closure starting day 28. No impact to our orders expected.
+
+We'll continue to monitor on our end — please let us know if anything changes with the ship date.
+
+Best regards,
+Purchasing, Copperline Coffee Machines
+Marked for a person: no
+
+--- Summary -----------------------------------------------------------
+Email: 04-pelham-maintenance-closure.eml (Plant maintenance closure - PO-5540 not affected)
+Coordinator: pipeline
+
+Check the analyst's reading against the supplier's own words:
+  Supplier wrote:
+    "A quick note for your planning: our plant will close for one week of annual maintenance, starting four weeks from today."
+    "Your open order, PO-5540 for 60 SW-3 steam wands, ships before the closure and will arrive on the scheduled date."
+  Analyst's reading: No change: PO-5540 (60 units) still arrives on day 11, ahead of the supplier's planned one-week plant closure starting on day 28.
+
+Drafts saved (1), in week-05/drafts/copperline-coffee/04-pelham-maintenance-closure-pipeline-20261123-201235/:
+  - supplier-reply.txt  to o.brady@pelhamfittings.example  (reviewer approved)
+
+Drafts marked for a person: none
+
+Decisions for a person: none
+
+Skipped:
+  - Customer notices: no orders at risk.
+
+Tokens:
+  supply analyst: 3 call(s), 7670 input, 404 output tokens
+  supplier writer: 1 call(s), 627 input, 169 output tokens
+  reviewer: 1 call(s), 826 input, 7 output tokens
+  Total: 9123 input, 580 output tokens

@@ -303,14 +303,14 @@ def server_errlog():
 
 
 def run_cli(description: str, handle: Callable[[anthropic.AsyncAnthropic, Path, Email], Awaitable[bool]]) -> None:
-    """Shared command line for pipeline.py and orchestrator.py."""
-    from supply_data import DEFAULT_DATA_DIR
+    """Shared command line for pipeline.py, orchestrator.py, and specialists.py."""
+    from supply_data import DEFAULT_DATA_DIR, DataError
 
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("--email", type=Path, required=True, metavar="EML",
                         help="the supplier email file (.eml) to prepare a response to")
     parser.add_argument("--org", type=Path, metavar="FOLDER", default=DEFAULT_DATA_DIR,
-                        help="data folder with the CSV files and prompts/ (default: week-05/brookfield-bikes)")
+                        help="company folder with the five CSV files and prompts/ (default: week-05/brookfield-bikes)")
     parser.add_argument("--save", type=Path, metavar="FILE",
                         help="also write everything printed to this text file (UTF-8)")
     args = parser.parse_args()
@@ -326,9 +326,14 @@ def run_cli(description: str, handle: Callable[[anthropic.AsyncAnthropic, Path, 
         sys.stderr = Tee(sys.__stderr__, log)
 
     async def run_all() -> int:
+        if not args.org.is_dir():
+            raise AgentError(f"--org {args.org} is not a folder.")
         email = read_email(args.email)
         client = anthropic.AsyncAnthropic(api_key=load_api_key())
-        return 0 if await handle(client, args.org, email) else 1
+        try:
+            return 0 if await handle(client, args.org.resolve(), email) else 1
+        except DataError as error:
+            raise AgentError(f"The company data in {args.org} could not be read: {error}") from None
 
     code: int | str = 0
     try:

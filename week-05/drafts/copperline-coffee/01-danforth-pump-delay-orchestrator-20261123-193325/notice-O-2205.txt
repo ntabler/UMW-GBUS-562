@@ -1,0 +1,23 @@
+DRAFT - NOT SENT
+To: hello@tallpinescoffee.example
+Subject: Update on your order O-2205
+For a person: YES
+  - O-2205 has a late penalty.
+Source email: 01-danforth-pump-delay.eml
+Coordinator: orchestrator
+
+Reviews:
+  Draft 1: APPROVE
+
+-----
+Subject: Update on Your Order O-2205
+
+Dear Tall Pines Coffee House,
+
+We're writing to update you on order O-2205 for 25 units of the Cafe One. The order is now expected to ship 2 days later than originally planned.
+
+We apologize for this delay. It is due to a delay in a part from one of our suppliers.
+
+We appreciate your patience and will keep you informed if anything further changes with your order.
+
+Customer Service, Copperline Coffee Machines

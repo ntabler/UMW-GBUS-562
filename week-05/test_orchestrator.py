@@ -40,12 +40,12 @@ class FakeTeam(specialists.Specialists):
     async def prepare_supplier_reply(self, email, brief):
         self.calls.append("supplier")
         draft = specialists.Draft("supplier", email.sender, "Re: x", "text", approved=True)
-        return self._save(draft, "supplier-reply.txt", "test")
+        return self._save(draft, "supplier-reply.txt", "test", "FINAL DRAFT TO SUPPLIER")
 
     async def prepare_customer_notice(self, brief, order_id, source=""):
         self.calls.append(order_id)
         draft = specialists.Draft("customer", "c@example.com", "x", "text", approved=True)
-        return self._save(draft, f"notice-{order_id}.txt", source)
+        return self._save(draft, f"notice-{order_id}.txt", source, f"FINAL DRAFT TO CUSTOMER {order_id}")
 
 
 def run(coro):
@@ -99,6 +99,17 @@ class ToolRuleTests(unittest.TestCase):
         self.call("draft_supplier_reply")
         self.assertTrue(self.call("draft_supplier_reply")[1])
         self.assertEqual(self.team.calls, ["analyst", "supplier"])
+
+    def test_skipped_says_options_when_no_order_listed_at_risk(self):
+        # Like Marlow: each option's orders are under options, and orders_at_risk is empty.
+        brief = copy.deepcopy(BRIEF)
+        brief["orders_at_risk"] = []
+        brief["options"] = [{"name": "Option A", "order_ids": ["O-1043"]}, {"name": "Option B", "order_ids": []}]
+        self.team.fixed_brief = brief
+        self.call("run_supply_analyst")
+        skipped = self.run.skipped("")
+        self.assertTrue(any("supplier offered options" in s for s in skipped))
+        self.assertNotIn("Customer notices: no orders at risk.", skipped)
 
     def test_skipped_lists_missing_notices(self):
         self.call("run_supply_analyst")
@@ -176,6 +187,37 @@ class LoopTests(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("finish: never called", out)
         self.assertIn("Supply analyst: the orchestrator did not run it.", out)
+
+
+EMAILS = supply_data.DEFAULT_DATA_DIR / "supplier-emails"
+
+
+class ReadingCheckTests(unittest.TestCase):
+    def sentences(self, name):
+        from common import read_email
+        return specialists.schedule_sentences(read_email(EMAILS / name).body)
+
+    def test_northgate_timing_sentence_is_shown(self):
+        found = self.sentences("01-northgate-controller-delay.eml")
+        self.assertIn("The remaining 280 will follow three weeks later.", found)
+        self.assertIn("We can ship 120 of the 400 controllers on the scheduled date.", found)
+        self.assertFalse(any("sorry" in s for s in found))
+        self.assertFalse(any("Karen Walsh" in s for s in found))
+
+    def test_kendall_options_and_deadline_are_shown(self):
+        found = self.sentences("02-kendall-tire-options.eml")
+        self.assertTrue(any(s.startswith("Option 1:") and "two weeks later" in s for s in found))
+        self.assertTrue(any(s.startswith("Option 2:") for s in found))
+        self.assertIn("Please tell us which option you prefer within two business days.", found)
+
+    def test_summary_shows_both_sides(self):
+        from common import read_email
+        email = read_email(EMAILS / "01-northgate-controller-delay.eml")
+        lines = specialists.reading_check_lines(email, BRIEF)
+        self.assertIn('    "The remaining 280 will follow three weeks later."', lines)
+        self.assertEqual(lines[-1], f"  Analyst's reading: {BRIEF['what_changed']}")
+        self.assertEqual(specialists.reading_check_lines(email, None)[-1],
+                         "  Analyst's reading: none (no checked brief)")
 
 
 if __name__ == "__main__":

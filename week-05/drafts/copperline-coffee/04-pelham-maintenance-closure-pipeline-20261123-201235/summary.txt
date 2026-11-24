@@ -1,0 +1,24 @@
+Email: 04-pelham-maintenance-closure.eml (Plant maintenance closure - PO-5540 not affected)
+Coordinator: pipeline
+
+Check the analyst's reading against the supplier's own words:
+  Supplier wrote:
+    "A quick note for your planning: our plant will close for one week of annual maintenance, starting four weeks from today."
+    "Your open order, PO-5540 for 60 SW-3 steam wands, ships before the closure and will arrive on the scheduled date."
+  Analyst's reading: No change: PO-5540 (60 units) still arrives on day 11, ahead of the supplier's planned one-week plant closure starting on day 28.
+
+Drafts saved (1), in week-05/drafts/copperline-coffee/04-pelham-maintenance-closure-pipeline-20261123-201235/:
+  - supplier-reply.txt  to o.brady@pelhamfittings.example  (reviewer approved)
+
+Drafts marked for a person: none
+
+Decisions for a person: none
+
+Skipped:
+  - Customer notices: no orders at risk.
+
+Tokens:
+  supply analyst: 3 call(s), 7670 input, 404 output tokens
+  supplier writer: 1 call(s), 627 input, 169 output tokens
+  reviewer: 1 call(s), 826 input, 7 output tokens
+  Total: 9123 input, 580 output tokens

@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Coordinator 2: Claude decides which specialists to use for one supplier email.
 
+--org names the company folder (default week-05/brookfield-bikes): its five CSV
+files, supplier-emails/, and prompts/, including prompts/orchestrator.txt.
+
 From the top of the repository:
 
     .venv/bin/python week-05/orchestrator.py \
@@ -8,7 +11,7 @@ From the top of the repository:
     .venv/bin/python week-05/orchestrator.py --email <file.eml> --save northgate-orchestrator-run.txt
 
 An agent (common.MODEL, claude-sonnet-5) gets the system prompt in
-brookfield-bikes/prompts/orchestrator.txt and four tools:
+<company folder>/prompts/orchestrator.txt and four tools:
   - run_supply_analyst      the supply analyst from specialists.py (JSON brief)
   - draft_supplier_reply    the supplier writer, then the review step
   - draft_customer_notice   the customer writer for one order ID, then the review step
@@ -19,7 +22,7 @@ Code still enforces the same rules as the pipeline: a customer notice needs a
 checked brief that lists the order as at risk, and no notice is drafted while
 the supplier's options are undecided. Each specialist runs at most once per
 email (once per order for notices). Drafts are saved to
-week-05/drafts/<email>-orchestrator-<time>/ and never sent.
+week-05/drafts/<company folder>/<email>-orchestrator-<time>/ and never sent.
 
 At the end it prints the same summary as the pipeline, plus the orchestrator's
 own summary and whether it says a person must decide.
@@ -54,11 +57,14 @@ TOOLS = [
     {
         "name": "draft_supplier_reply",
         "description": (
-            "Draft Brookfield's reply to the supplier, using the analyst's brief if it has been run "
-            "(customer names and order numbers are removed first). The draft is reviewed, revised "
-            "up to 2 times, and saved for a person to check; nothing is sent. The writer may decide "
-            "no reply is needed. Returns whether the reviewer approved it and whether it is marked "
-            "for a person. It can run once per email."
+            "Draft the company's reply to the supplier, using the analyst's brief if it has been run "
+            "(customer names and order numbers are removed first). Draft one even when the supplier "
+            "asks the company to choose an option or make a decision: the reply never chooses, it "
+            "says the company will confirm by the time the supplier asked for, so a person can "
+            "decide and still answer on time. The draft is reviewed, revised up to 2 times, and "
+            "saved for a person to check; nothing is sent. The writer may decide no reply is needed. "
+            "Returns whether the reviewer approved it and whether it is marked for a person. It can "
+            "run once per email."
         ),
         "input_schema": NO_INPUT,
         "strict": True,
@@ -67,13 +73,16 @@ TOOLS = [
         "name": "draft_customer_notice",
         "description": (
             "Draft a notice to the customer of one order at risk. The order must be in the "
-            "analyst's brief, so run the analyst first. Not allowed while the supplier's options "
-            "are undecided: a person must choose an option before customers are told. The draft is "
-            "reviewed and saved for a person to check; nothing is sent. One call per order."
+            "analyst's brief, so run the analyst first. When the brief lists no options, draft a "
+            "notice for every order in orders_at_risk, one call per order: drafting doesn't tell "
+            "the customer anything, because each notice is only saved for a person to check and "
+            "decide whether to send, so don't hold notices back for a decision. Not allowed while "
+            "the supplier's options are undecided: a person must choose an option before customers "
+            "are told."
         ),
         "input_schema": {
             "type": "object",
-            "properties": {"order_id": {"type": "string", "description": "An order ID from the brief, e.g. O-1043."}},
+            "properties": {"order_id": {"type": "string", "description": "An order ID from the brief's orders_at_risk."}},
             "required": ["order_id"],
             "additionalProperties": False,
         },
@@ -82,7 +91,7 @@ TOOLS = [
     {
         "name": "finish",
         "description": (
-            "End the job. Give a short summary for Brookfield's purchasing manager of what was done "
+            "End the job. Give a short summary for the company's purchasing manager of what was done "
             "and what still needs attention, and whether a person must make a decision."
         ),
         "input_schema": {
@@ -191,7 +200,7 @@ class Orchestration:
         if self.brief is not None:
             at_risk = [r["order_id"] for r in self.brief["orders_at_risk"]]
             missing = [o for o in at_risk if o not in self.noticed]
-            if self.brief["options"] and at_risk:
+            if self.brief["options"]:
                 out.append("Customer notices: the supplier offered options, so no notice is drafted "
                            "until a person chooses one.")
             elif not at_risk:
@@ -209,14 +218,15 @@ class Orchestration:
 
 async def run_orchestrator(client, data_dir: Path, email: Email) -> bool:
     stamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-    out_dir = DRAFTS_DIR / f"{email.path.stem}-orchestrator-{stamp}"
+    out_dir = DRAFTS_DIR / data_dir.name / f"{email.path.stem}-orchestrator-{stamp}"
     team = Specialists(client, data_dir, out_dir, coordinator="orchestrator")
+    print(f"Company: {team.company} ({data_dir.name})")
     print(f"Email:   {email.path}\nFrom:    {email.message.get('From', email.sender)}\nSubject: {email.subject}")
 
     heading("Orchestrator")
     run = Orchestration(team, email)
     messages = [{"role": "user", "content": (
-        "Coordinate Brookfield's response to this supplier email. Call finish when you are done.\n\n"
+        f"Coordinate {team.company}'s response to this supplier email. Call finish when you are done.\n\n"
         + email.as_text())}]
     result = await tool_loop(client, team.usage, "orchestrator", read_prompt(data_dir, "orchestrator"),
                              messages, TOOLS, run.run_tool, MAX_TOOL_CALLS,
@@ -240,10 +250,11 @@ async def run_orchestrator(client, data_dir: Path, email: Email) -> bool:
         extra = ["Orchestrator's summary: none (it stopped without calling finish)"]
         decisions.append("The orchestrator stopped without finishing: check this email by hand.")
 
-    print_summary(team, email, out_dir, run.drafts, decisions, run.skipped(result.stopped), extra=extra)
+    print_summary(team, email, out_dir, run.drafts, decisions, run.skipped(result.stopped), run.brief,
+                  extra=extra)
     return run.finished is not None and not (run.analyst_ran and run.brief is None)
 
 
 if __name__ == "__main__":
-    run_cli("Prepare Brookfield's response to one supplier email; Claude decides which specialists to use.",
+    run_cli("Prepare a company's response to one supplier email; Claude decides which specialists to use.",
             run_orchestrator)

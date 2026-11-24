@@ -1,0 +1,28 @@
+DRAFT - NOT SENT
+To: v.lindqvist@marlowmetal.example
+Subject: Re: PO-5520 - BL-12 boilers - please choose a shipping option
+For a person: no
+  (none)
+Source email: 02-marlow-boiler-options.eml
+Coordinator: orchestrator
+
+Reviews:
+  Draft 1: APPROVE
+
+-----
+Subject: RE: PO-5520 - BL-12 boilers - please choose a shipping option
+
+Hi Victor,
+
+Thanks for the heads-up on PO-5520.
+
+As we understand it:
+- Option A: 80 units on day 7, 120 units on day 21
+- Option B: all 200 units on day 13
+
+Either option causes a delay to one of our customer orders. Under Option A, we'd be short 5 units, delaying that order by 4 days. Under Option B, we'd be short 40 units until day 13, delaying that order by 1 day.
+
+We're evaluating the impact internally and will confirm our choice within your three-business-day window. If there's any way to pull forward the welding schedule and reduce either shortfall or delay, please let us know — that would help us avoid disruption on our end.
+
+Regards,
+Purchasing, Copperline Coffee Machines

@@ -139,6 +139,28 @@ class ReviewStepTests(unittest.TestCase):
         self.assertIsNone(run(team.prepare_supplier_reply(fake_email(), BRIEF)))
         self.assertFalse((self.out / "supplier-reply.txt").exists())
 
+    def printed(self, coro):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            value = asyncio.run(coro)
+        return value, out.getvalue()
+
+    def test_final_supplier_draft_printed_once(self):
+        team = Scripted(self.out, ["first try", "the final reply"], ["REVISE\nfix", "APPROVE"])
+        _, out = self.printed(team.prepare_supplier_reply(fake_email(), BRIEF))
+        self.assertEqual(out.count("FINAL DRAFT TO SUPPLIER"), 1)
+        self.assertIn("\nFINAL DRAFT TO SUPPLIER\nthe final reply\nMarked for a person: no\n", out)
+        self.assertNotIn("FINAL DRAFT TO SUPPLIER\nfirst try", out)
+
+    def test_final_customer_draft_names_order_and_mark(self):
+        team = Scripted(self.out, ["Your order is late."], ["APPROVE"])
+        _, out = self.printed(team.prepare_customer_notice(BRIEF, "O-1043"))
+        self.assertIn("\nFINAL DRAFT TO CUSTOMER O-1043\nYour order is late.\nMarked for a person: yes\n", out)
+
+    def test_company_name_from_folder(self):
+        team = Scripted(self.out, [], [])
+        self.assertEqual(team.company, "Brookfield Bikes")
+
 
 class FactsTests(unittest.TestCase):
     def setUp(self):
@@ -157,6 +179,7 @@ class FactsTests(unittest.TestCase):
         self.assertEqual(facts["days_later_than_planned"], 12)
         self.assertNotIn("late_penalty", facts)
         self.assertNotIn("Main Street", str(facts))
+        self.assertEqual((facts["product"], facts["quantity"]), ("Commuter E", 100))
 
     def test_check_brief_needs_tool_numbers(self):
         data = supply_data.load()
